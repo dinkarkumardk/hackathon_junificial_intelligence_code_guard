@@ -4,6 +4,7 @@ import com.hackathon.codeguard.model.AnalysisResult;
 import com.hackathon.codeguard.model.FileAnalysisResult;
 import com.hackathon.codeguard.model.ReportType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hackathon.codeguard.service.openai.OpenAIAnalysisService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -353,14 +354,31 @@ public class ReportGenerationService {
     public void generateKTDocumentation(AnalysisResult result, String outputDir) throws IOException {
         Path ktDir = Paths.get(outputDir, "kt");
         Files.createDirectories(ktDir);
-        // Generate each KT section as a separate file, passing AnalysisResult for file-specific details
-        Files.writeString(ktDir.resolve("purpose.html"), buildKTPurposeHtml(result));
-        Files.writeString(ktDir.resolve("design.html"), buildKTDesignHtml(result));
-        Files.writeString(ktDir.resolve("modules.html"), buildKTModulesHtml(result));
+        OpenAIAnalysisService openAIService = new OpenAIAnalysisService();
+        // Merge and summarize KT data for each section
+        String mergedPurpose = result.getFileResults().stream()
+            .map(FileAnalysisResult::getKtPurpose)
+            .filter(s -> s != null && !s.isBlank())
+            .reduce("", (a, b) -> a + "\n" + b);
+        String mergedDesign = result.getFileResults().stream()
+            .map(FileAnalysisResult::getKtDesign)
+            .filter(s -> s != null && !s.isBlank())
+            .reduce("", (a, b) -> a + "\n" + b);
+        String mergedModules = result.getFileResults().stream()
+            .map(FileAnalysisResult::getKtModules)
+            .filter(s -> s != null && !s.isBlank())
+            .reduce("", (a, b) -> a + "\n" + b);
+        // Summarize using OpenAI
+        String summarizedPurpose = mergedPurpose.isBlank() ? "No data from OpenAI." : openAIService.summarizePurpose(mergedPurpose);
+        String summarizedDesign = mergedDesign.isBlank() ? "No data from OpenAI." : openAIService.summarizeDesign(mergedDesign);
+        String summarizedModules = mergedModules.isBlank() ? "No data from OpenAI." : openAIService.summarizeModules(mergedModules);
+        // Generate KT HTML files using summaries
+        Files.writeString(ktDir.resolve("purpose.html"), buildKTPurposeHtml(summarizedPurpose));
+        Files.writeString(ktDir.resolve("design.html"), buildKTDesignHtml(summarizedDesign));
+        Files.writeString(ktDir.resolve("modules.html"), buildKTModulesHtml(summarizedModules));
         Files.writeString(ktDir.resolve("dataflow.html"), buildKTDataFlowHtml(result));
         Files.writeString(ktDir.resolve("execution.html"), buildKTExecutionHtml(result));
         Files.writeString(ktDir.resolve("tools.html"), buildKTToolsHtml(result));
-        // Generate index.html linking to all KT section files
         Files.writeString(ktDir.resolve("index.html"), buildKTIndexHtml());
     }
 
@@ -407,118 +425,70 @@ public class ReportGenerationService {
         """;
     }
 
-    private String buildKTPurposeHtml(AnalysisResult result) {
-        StringBuilder html = new StringBuilder();
-        html.append("""
+    private String buildKTPurposeHtml(String summary) {
+        String html = String.format("""
         <!DOCTYPE html>
         <html lang='en'>
         <head>
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>KT - Purpose & Goals</title>
-        """ + getKTCommonCss() + """
+        %s
         </head>
         <body>
         <div class='container'>
             <h1>Purpose, Key Goals, and Stakeholders</h1>
-            <ul>
-        """);
-        Map<String, List<String>> purposeToFiles = new LinkedHashMap<>();
-        for (FileAnalysisResult file : result.getFileResults()) {
-            String purpose = file.getKtPurpose() != null ? file.getKtPurpose().trim() : "No data from OpenAI.";
-            purposeToFiles.computeIfAbsent(purpose, k -> new ArrayList<>()).add(file.getFilename());
-        }
-        for (Map.Entry<String, List<String>> entry : purposeToFiles.entrySet()) {
-            html.append("<li>")
-                .append(entry.getKey())
-                .append("<br><em>Files: ")
-                .append(String.join(", ", entry.getValue()))
-                .append("</em></li>");
-        }
-        html.append("""
-            </ul>
+            <p>%s</p>
             <a href='index.html'>Back to KT Index</a>
         </div>
         </body>
         </html>
-        """);
-        return html.toString();
+        """, getKTCommonCss(), summary);
+        return html;
     }
 
-    private String buildKTDesignHtml(AnalysisResult result) {
-        StringBuilder html = new StringBuilder();
-        html.append("""
+    private String buildKTDesignHtml(String summary) {
+        String html = String.format("""
         <!DOCTYPE html>
         <html lang='en'>
         <head>
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>KT - System Design</title>
-        """ + getKTCommonCss() + """
+        %s
         </head>
         <body>
-        <div class=\"container\">
+        <div class='container'>
             <h1>High-Level System Design, Tech Stack, and Component Interactions</h1>
-            <ul>
-        """);
-        Map<String, List<String>> designToFiles = new LinkedHashMap<>();
-        for (FileAnalysisResult file : result.getFileResults()) {
-            String design = file.getKtDesign() != null ? file.getKtDesign().trim() : "No data from OpenAI.";
-            designToFiles.computeIfAbsent(design, k -> new ArrayList<>()).add(file.getFilename());
-        }
-        for (Map.Entry<String, List<String>> entry : designToFiles.entrySet()) {
-            html.append("<li>")
-                .append(entry.getKey())
-                .append("<br><em>Files: ")
-                .append(String.join(", ", entry.getValue()))
-                .append("</em></li>");
-        }
-        html.append("""
-            </ul>
+            <p>%s</p>
             <a href='index.html'>Back to KT Index</a>
         </div>
         </body>
         </html>
-        """);
-        return html.toString();
+        """, getKTCommonCss(), summary);
+        return html;
     }
 
-    private String buildKTModulesHtml(AnalysisResult result) {
-        StringBuilder html = new StringBuilder();
-        html.append("""
+    private String buildKTModulesHtml(String summary) {
+        String html = String.format("""
         <!DOCTYPE html>
         <html lang='en'>
         <head>
             <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>KT - Modules & Business Logic</title>
-        """ + getKTCommonCss() + """
+        %s
         </head>
         <body>
-        <div class=\"container\">
+        <div class='container'>
             <h1>Functional Overview of Each Module and Key Business Logic</h1>
-            <ul>
-        """);
-        Map<String, List<String>> modulesToFiles = new LinkedHashMap<>();
-        for (FileAnalysisResult file : result.getFileResults()) {
-            String modules = file.getKtModules() != null ? file.getKtModules().trim() : "No data from OpenAI.";
-            modulesToFiles.computeIfAbsent(modules, k -> new ArrayList<>()).add(file.getFilename());
-        }
-        for (Map.Entry<String, List<String>> entry : modulesToFiles.entrySet()) {
-            html.append("<li>")
-                .append(entry.getKey())
-                .append("<br><em>Files: ")
-                .append(String.join(", ", entry.getValue()))
-                .append("</em></li>");
-        }
-        html.append("""
-            </ul>
+            <p>%s</p>
             <a href='index.html'>Back to KT Index</a>
         </div>
         </body>
         </html>
-        """);
-        return html.toString();
+        """, getKTCommonCss(), summary);
+        return html;
     }
 
     private String buildKTDataFlowHtml(AnalysisResult result) {

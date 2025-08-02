@@ -306,4 +306,46 @@ public class OpenAIAnalysisService {
         return getResponseFromOpenAI(prompt);
     }
     // Remove extractKt* methods
+
+    /**
+     * Summarizes the KT Purpose section using OpenAI
+     */
+    public String summarizePurpose(String purposeText) {
+        String prompt = "Summarize the following project purpose and goals for onboarding documentation. " +
+                "Make it concise, clear, and suitable for new joiners.\n\n" + purposeText;
+        try {
+            return getResponseFromOpenAI(prompt).trim();
+        } catch (Exception e) {
+            logger.warn("OpenAI summarizePurpose failed: {}", e.getMessage());
+            return "No summary available.";
+        }
+    }
+
+    /**
+     * Summarizes the KT Design section using OpenAI
+     */
+    public String summarizeDesign(String designText) {
+        String prompt = "Summarize the following system design, architecture, and tech stack for onboarding documentation. " +
+                "Make it concise, clear, and suitable for new joiners.\n\n" + designText;
+        try {
+            return getResponseFromOpenAI(prompt).trim();
+        } catch (Exception e) {
+            logger.warn("OpenAI summarizeDesign failed: {}", e.getMessage());
+            return "No summary available.";
+        }
+    }
+
+    /**
+     * Summarizes the KT Modules section using OpenAI
+     */
+    public String summarizeModules(String modulesText) {
+        String prompt = "Summarize the following modules and business logic for onboarding documentation. " +
+                "Make it concise, clear, and suitable for new joiners.\n\n" + modulesText;
+        try {
+            return getResponseFromOpenAI(prompt).trim();
+        } catch (Exception e) {
+            logger.warn("OpenAI summarizeModules failed: {}", e.getMessage());
+            return "No summary available.";
+        }
+    }
 }
