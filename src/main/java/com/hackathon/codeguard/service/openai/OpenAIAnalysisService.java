@@ -3,6 +3,7 @@ package com.hackathon.codeguard.service.openai;
 import com.hackathon.codeguard.cli.CodeGuardCLI.AnalysisMode;
 import com.hackathon.codeguard.model.FileAnalysisResult;
 import com.hackathon.codeguard.model.FileAnalysisResult.CodeIssue;
+import com.hackathon.codeguard.model.ScoreWithReason;
 import com.hackathon.codeguard.service.FileProcessingService;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatMessage;
@@ -63,11 +64,21 @@ public class OpenAIAnalysisService {
         String language = fileService.determineProgrammingLanguage(filePath);
         
         // Analyze different aspects
-        result.setCodeQuality(analyzeCodeQuality(fileContent, language));
-        result.setSolid(analyzeSolidPrinciples(fileContent, language));
-        result.setDesignPatterns(analyzeDesignPatterns(fileContent, language));
-        result.setCleanCode(analyzeCleanCode(fileContent, language));
-        result.setSecurity(analyzeSecurity(fileContent, language));
+        ScoreWithReason codeQualityResult = analyzeCodeQuality(fileContent, language);
+        result.setCodeQuality(codeQualityResult.getScore());
+        result.setCodeQualityReason(codeQualityResult.getReason());
+        
+        ScoreWithReason solidResult = analyzeSolidPrinciples(fileContent, language);
+        result.setSolid(solidResult.getScore());
+        result.setSolidReason(solidResult.getReason());
+        
+        ScoreWithReason designPatternsResult = analyzeDesignPatterns(fileContent, language);
+        result.setDesignPatterns(designPatternsResult.getScore());
+        result.setDesignPatternsReason(designPatternsResult.getReason());
+        
+        ScoreWithReason securityResult = analyzeSecurity(fileContent, language);
+        result.setSecurity(securityResult.getScore());
+        result.setSecurityReason(securityResult.getReason());
         
         // Calculate final score
         result.calculateFinalScore();
@@ -80,67 +91,55 @@ public class OpenAIAnalysisService {
         return result;
     }
 
-    private double analyzeCodeQuality(String code, String language) throws Exception {
+    private ScoreWithReason analyzeCodeQuality(String code, String language) throws Exception {
         String prompt = String.format(
             "Analyze the following %s code for overall quality including readability, maintainability, " +
-            "and documentation. Return a score from 0-100 where 100 is excellent quality.\\n\\n" +
+            "and documentation. Provide a score from 0-100 where 100 is excellent quality.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Respond with only a number between 0 and 100.",
+            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
             language, code
         );
         
-        return getScoreFromOpenAI(prompt);
+        return getScoreWithReasonFromOpenAI(prompt);
     }
 
-    private double analyzeSolidPrinciples(String code, String language) throws Exception {
+    private ScoreWithReason analyzeSolidPrinciples(String code, String language) throws Exception {
         String prompt = String.format(
             "Evaluate how well the following %s code follows SOLID principles " +
             "(Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion). " +
             "Return a score from 0-100.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Respond with only a number between 0 and 100.",
+            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
             language, code
         );
         
-        return getScoreFromOpenAI(prompt);
+        return getScoreWithReasonFromOpenAI(prompt);
     }
 
-    private double analyzeDesignPatterns(String code, String language) throws Exception {
+    private ScoreWithReason analyzeDesignPatterns(String code, String language) throws Exception {
         String prompt = String.format(
             "Analyze the following %s code for proper use of design patterns and architectural decisions. " +
             "Consider if appropriate patterns are used and if they're implemented correctly. " +
             "Return a score from 0-100.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Respond with only a number between 0 and 100.",
+            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
             language, code
         );
         
-        return getScoreFromOpenAI(prompt);
+        return getScoreWithReasonFromOpenAI(prompt);
     }
 
-    private double analyzeCleanCode(String code, String language) throws Exception {
-        String prompt = String.format(
-            "Evaluate the following %s code for clean code practices including meaningful names, " +
-            "small functions, clear structure, and minimal complexity. Return a score from 0-100.\\n\\n" +
-            "Code:\\n%s\\n\\n" +
-            "Respond with only a number between 0 and 100.",
-            language, code
-        );
-        
-        return getScoreFromOpenAI(prompt);
-    }
-
-    private double analyzeSecurity(String code, String language) throws Exception {
+    private ScoreWithReason analyzeSecurity(String code, String language) throws Exception {
         String prompt = String.format(
             "Analyze the following %s code for security vulnerabilities and best practices. " +
             "Look for common security issues like injection flaws, insecure data handling, etc. " +
             "Return a score from 0-100 where 100 is very secure.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Respond with only a number between 0 and 100.",
+            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
             language, code
         );
         
-        return getScoreFromOpenAI(prompt);
+        return getScoreWithReasonFromOpenAI(prompt);
     }
 
     private List<CodeIssue> identifyIssues(String code, String language) throws Exception {
@@ -196,15 +195,24 @@ public class OpenAIAnalysisService {
         return parseMetricsFromResponse(response);
     }
 
-    private double getScoreFromOpenAI(String prompt) throws Exception {
+    private ScoreWithReason getScoreWithReasonFromOpenAI(String prompt) throws Exception {
         String response = getResponseFromOpenAI(prompt);
         try {
-            // Extract number from response
-            String cleanResponse = response.trim().replaceAll("[^0-9.]", "");
-            return Double.parseDouble(cleanResponse);
-        } catch (NumberFormatException e) {
-            logger.warn("Could not parse score from response: {}", response);
-            return 50.0; // Default score
+            JsonNode jsonNode = objectMapper.readTree(response);
+            double score = jsonNode.get("score").asDouble();
+            String reason = jsonNode.get("reason").asText();
+            return new ScoreWithReason(score, reason);
+        } catch (Exception e) {
+            logger.warn("Could not parse score and reason from response: {}", response);
+            // Try to extract just a number as fallback
+            try {
+                String cleanResponse = response.trim().replaceAll("[^0-9.]", "");
+                double score = Double.parseDouble(cleanResponse);
+                return new ScoreWithReason(score, "Unable to parse detailed reasoning from response");
+            } catch (NumberFormatException ne) {
+                logger.warn("Could not parse any score from response: {}", response);
+                return new ScoreWithReason(50.0, "Unable to analyze - using default score");
+            }
         }
     }
 

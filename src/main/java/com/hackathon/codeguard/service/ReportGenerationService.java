@@ -102,6 +102,15 @@ public class ReportGenerationService {
                     .issue-item { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 10px 0; }
                     .issue-critical { border-left-color: #dc3545; background: #f8d7da; }
                     .issue-high { border-left-color: #fd7e14; background: #ffeeba; }
+                    .tooltip { position: relative; cursor: help; }
+                    .tooltip .tooltiptext { visibility: hidden; width: 300px; background-color: #555; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -150px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; line-height: 1.4; }
+                    .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+                    .reasoning-section { margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
+                    .reasoning-section h2 { color: #495057; margin-bottom: 15px; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+                    .reasoning-item { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+                    .reasoning-item h3 { color: #212529; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
+                    .reasoning-title { font-weight: bold; color: #495057; margin: 10px 0 5px 0; }
+                    .reasoning-text { color: #6c757d; line-height: 1.5; padding: 8px 0; border-left: 3px solid #007bff; padding-left: 15px; background-color: #f8f9fa; border-radius: 3px; }
                 </style>
             </head>
             <body>
@@ -149,7 +158,6 @@ public class ReportGenerationService {
                         <th>Code Quality</th>
                         <th>SOLID</th>
                         <th>Design Patterns</th>
-                        <th>Clean Code</th>
                         <th>Security</th>
                         <th>Final Score</th>
                         <th>Quality</th>
@@ -168,21 +176,31 @@ public class ReportGenerationService {
             html.append(String.format("""
                 <tr>
                     <td>%s</td>
-                    <td class="score">%.1f</td>
-                    <td class="score">%.1f</td>
-                    <td class="score">%.1f</td>
-                    <td class="score">%.1f</td>
-                    <td class="score">%.1f</td>
+                    <td class="score tooltip">%.1f
+                        <span class="tooltiptext">%s</span>
+                    </td>
+                    <td class="score tooltip">%.1f
+                        <span class="tooltiptext">%s</span>
+                    </td>
+                    <td class="score tooltip">%.1f
+                        <span class="tooltiptext">%s</span>
+                    </td>
+                    <td class="score tooltip">%.1f
+                        <span class="tooltiptext">%s</span>
+                    </td>
                     <td class="score">%.1f</td>
                     <td><span class="%s">%s</span></td>
                 </tr>
                 """,
                 file.getFilename(),
                 file.getCodeQuality(),
+                escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available"),
                 file.getSolid(),
+                escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available"),
                 file.getDesignPatterns(),
-                file.getCleanCode(),
+                escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available"),
                 file.getSecurity(),
+                escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available"),
                 file.getFinalScore(),
                 qualityClass,
                 file.getQualityIndicator().getLabel()
@@ -190,6 +208,44 @@ public class ReportGenerationService {
         }
 
         html.append("</tbody></table>");
+
+        // Detailed reasoning section
+        html.append("""
+            <div class="reasoning-section">
+                <h2>Detailed Analysis Reasoning</h2>
+                <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings for each file:</p>
+            """);
+        
+        for (FileAnalysisResult file : result.getFileResults()) {
+            html.append(String.format("""
+                <div class="reasoning-item">
+                    <h3>%s</h3>
+                    <div class="reasoning-title">Code Quality (%.1f/100):</div>
+                    <div class="reasoning-text">%s</div>
+                    <br>
+                    <div class="reasoning-title">SOLID Principles (%.1f/100):</div>
+                    <div class="reasoning-text">%s</div>
+                    <br>
+                    <div class="reasoning-title">Design Patterns (%.1f/100):</div>
+                    <div class="reasoning-text">%s</div>
+                    <br>
+                    <div class="reasoning-title">Security (%.1f/100):</div>
+                    <div class="reasoning-text">%s</div>
+                </div>
+                """,
+                escapeHtml(file.getFilename()),
+                file.getCodeQuality(),
+                escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available"),
+                file.getSolid(),
+                escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available"),
+                file.getDesignPatterns(),
+                escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available"),
+                file.getSecurity(),
+                escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available")
+            ));
+        }
+        
+        html.append("</div>");
 
         // Recommendations
         if (result.getSummary().getRecommendations() != null && !result.getSummary().getRecommendations().isEmpty()) {
@@ -354,5 +410,17 @@ public class ReportGenerationService {
         if (score >= 80) return "score-good";
         if (score >= 70) return "score-fair";
         return "score-poor";
+    }
+    
+    /**
+     * Escapes HTML special characters to prevent XSS and formatting issues
+     */
+    private String escapeHtml(String text) {
+        if (text == null) return "";
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;")
+                   .replace("'", "&#39;");
     }
 }

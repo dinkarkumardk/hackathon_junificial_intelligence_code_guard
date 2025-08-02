@@ -36,6 +36,19 @@ public class FileAnalysisResult {
     @JsonProperty("qualityIndicator")
     private QualityIndicator qualityIndicator;
     
+    // Reason fields for detailed explanations
+    @JsonProperty("codeQualityReason")
+    private String codeQualityReason;
+    
+    @JsonProperty("solidReason")
+    private String solidReason;
+    
+    @JsonProperty("designPatternsReason")
+    private String designPatternsReason;
+    
+    @JsonProperty("securityReason")
+    private String securityReason;
+    
     @JsonProperty("issues")
     private List<CodeIssue> issues;
     
@@ -102,6 +115,19 @@ public class FileAnalysisResult {
     
     public Map<String, Object> getMetrics() { return metrics; }
     public void setMetrics(Map<String, Object> metrics) { this.metrics = metrics; }
+    
+    // Reason getters and setters
+    public String getCodeQualityReason() { return codeQualityReason; }
+    public void setCodeQualityReason(String codeQualityReason) { this.codeQualityReason = codeQualityReason; }
+    
+    public String getSolidReason() { return solidReason; }
+    public void setSolidReason(String solidReason) { this.solidReason = solidReason; }
+    
+    public String getDesignPatternsReason() { return designPatternsReason; }
+    public void setDesignPatternsReason(String designPatternsReason) { this.designPatternsReason = designPatternsReason; }
+    
+    public String getSecurityReason() { return securityReason; }
+    public void setSecurityReason(String securityReason) { this.securityReason = securityReason; }
 
     /**
      * Quality indicator enum for color coding
