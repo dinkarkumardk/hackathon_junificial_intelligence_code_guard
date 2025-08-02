@@ -127,7 +127,38 @@ public class CodeGuardCLI implements Callable<Integer> {
 
     private List<Path> determineFilesToAnalyze() {
         // Implementation will scan files/directories and filter code files
-        // This is a placeholder for the actual implementation
-        return List.of();
+        List<Path> result = new java.util.ArrayList<>();
+        java.util.function.Predicate<Path> codeFileFilter = path -> {
+            String name = path.getFileName().toString().toLowerCase();
+            return name.endsWith(".java") || name.endsWith(".ts");
+        };
+
+        if (scanDirectory != null && !scanDirectory.isEmpty()) {
+            Path scanPath = new File(scanDirectory).toPath();
+            if (java.nio.file.Files.isDirectory(scanPath)) {
+            try (java.util.stream.Stream<Path> stream = java.nio.file.Files.walk(scanPath)) {
+                stream.filter(java.nio.file.Files::isRegularFile)
+                  .filter(codeFileFilter)
+                  .forEach(result::add);
+            } catch (Exception e) {
+                System.err.println("Error scanning directory: " + e.getMessage());
+            }
+            }
+        } else if (files != null) {
+            for (File file : files) {
+            if (file.isDirectory()) {
+                try (java.util.stream.Stream<Path> stream = java.nio.file.Files.walk(file.toPath())) {
+                stream.filter(java.nio.file.Files::isRegularFile)
+                      .filter(codeFileFilter)
+                      .forEach(result::add);
+                } catch (Exception e) {
+                System.err.println("Error scanning directory: " + e.getMessage());
+                }
+            } else if (file.isFile() && codeFileFilter.test(file.toPath())) {
+                result.add(file.toPath());
+            }
+            }
+        }
+        return result;
     }
 }
