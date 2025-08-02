@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  code-guard:
+    build: .
+    image: code-guard:latest
+    container_name: code-guard-app
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JAVA_OPTS=-Xmx1g -Xms512m
+      - QUALITY_THRESHOLD=75
+    volumes:
+      # Mount your source code directory
+      - ./src:/app/input:ro
+      # Mount reports output directory
+      - ./reports:/app/reports
+      # Mount logs directory
+      - ./logs:/app/logs
+    command: ["scan"]
+    profiles:
+      - analysis
+
+  # QA Automation service
+  code-guard-qa:
+    build: .
+    image: code-guard:latest
+    container_name: code-guard-qa
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JAVA_OPTS=-Xmx1g -Xms512m
+      - QUALITY_THRESHOLD=70
+    volumes:
+      - ./src:/app/input:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: ["qa-automation"]
+    profiles:
+      - qa
+
+  # DevOps Testing service  
+  code-guard-devops:
+    build: .
+    image: code-guard:latest
+    container_name: code-guard-devops
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JAVA_OPTS=-Xmx1g -Xms512m
+      - QUALITY_THRESHOLD=80
+    volumes:
+      - ./src:/app/input:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: ["devops-testing"]
+    profiles:
+      - devops
+
+  # CI/CD Pipeline service
+  code-guard-pipeline:
+    build: .
+    image: code-guard:latest
+    container_name: code-guard-pipeline
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - QUALITY_THRESHOLD=${QUALITY_THRESHOLD:-75}
+      - CI_MODE=true
+    volumes:
+      - ${SOURCE_DIR:-./src}:/app/input:ro
+      - ${REPORTS_DIR:-./reports}:/app/reports
+      - ${LOGS_DIR:-./logs}:/app/logs
+    command: ["qa-automation", "--format", "json"]
+    profiles:
+      - pipeline
+
+  # Development service with file watching (for development)
+  code-guard-dev:
+    build: .
+    image: code-guard:latest
+    container_name: code-guard-dev
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - JAVA_OPTS=-Xmx512m -Xms256m
+      - QUALITY_THRESHOLD=60
+    volumes:
+      - ./src:/app/input:ro
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+    command: ["scan", "--threshold", "60", "--report-type", "both"]
+    profiles:
+      - dev
+
+networks:
+  default:
+    name: code-guard-network

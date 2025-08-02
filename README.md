@@ -20,6 +20,8 @@ A minimal code analysis tool that scores code files and generates technical & no
 
 ## Setup
 
+### Local Development
+
 1. **Clone the repository**:
    ```bash
    git clone <repository-url>
@@ -46,9 +48,33 @@ A minimal code analysis tool that scores code files and generates technical & no
    mvn clean package
    ```
 
+### Docker Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd hackathon_junificial_intelligence_code_guard
+   ```
+
+2. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set your OPENAI_API_KEY
+   ```
+
+3. **Build Docker image**:
+   ```bash
+   ./docker-run.sh build
+   ```
+
+4. **Run analysis**:
+   ```bash
+   ./docker-run.sh run
+   ```
+
 ## Usage
 
-### Command Line Interface
+### Command Line Interface (Local)
 
 ```bash
 # Analyze specific files
@@ -76,6 +102,36 @@ java -jar target/code-guard-1.0.0.jar --scan ./src --report-type technical
 java -jar target/code-guard-1.0.0.jar --scan ./src --output ./custom-reports
 ```
 
+### Docker Usage
+
+```bash
+# Basic analysis
+./docker-run.sh run
+
+# QA automation with custom threshold
+./docker-run.sh qa 75
+
+# DevOps testing with custom threshold
+./docker-run.sh devops 85
+
+# Using docker-compose profiles
+./docker-run.sh compose qa      # QA profile
+./docker-run.sh compose devops  # DevOps profile
+./docker-run.sh compose dev     # Development profile
+
+# Direct Docker commands
+docker run --rm \
+  -e OPENAI_API_KEY="your-api-key" \
+  -v "$(pwd)/src:/app/input:ro" \
+  -v "$(pwd)/reports:/app/reports" \
+  code-guard:latest scan --threshold 80
+
+# Docker Compose for different environments
+docker-compose --profile qa up        # QA environment
+docker-compose --profile devops up    # DevOps environment
+docker-compose --profile pipeline up  # CI/CD pipeline
+```
+
 ### Command Line Options
 
 - `FILES`: Code files or directories to analyze
@@ -101,23 +157,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-        with:
-          java-version: '17'
-          distribution: 'temurin'
       
-      - name: Build Code Guard
-        run: mvn clean package -DskipTests
-      
-      - name: Run Code Quality Analysis
+      - name: Run Code Quality Analysis with Docker
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          java -jar target/code-guard-1.0.0.jar --scan ./src --threshold 75 --format json
-          if [ $? -ne 0 ]; then
-            echo "Quality gate failed"
-            exit 1
-          fi
+          echo "OPENAI_API_KEY=$OPENAI_API_KEY" > .env
+          ./docker-run.sh build
+          ./docker-run.sh qa 75
       
       - name: Upload Reports
         uses: actions/upload-artifact@v3
@@ -137,13 +184,10 @@ pipeline {
     stages {
         stage('Code Quality Analysis') {
             steps {
-                sh 'mvn clean package -DskipTests'
                 sh '''
-                    java -jar target/code-guard-1.0.0.jar \
-                        --scan ./src \
-                        --mode devops-testing \
-                        --threshold 80 \
-                        --output ./reports
+                    echo "OPENAI_API_KEY=${OPENAI_API_KEY}" > .env
+                    ./docker-run.sh build
+                    ./docker-run.sh devops 80
                 '''
             }
             post {
@@ -161,6 +205,72 @@ pipeline {
         }
     }
 }
+```
+
+### GitLab CI
+
+```yaml
+stages:
+  - quality-check
+
+quality-analysis:
+  stage: quality-check
+  image: docker:20.10.16
+  services:
+    - docker:20.10.16-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - echo "OPENAI_API_KEY=$OPENAI_API_KEY" > .env
+  script:
+    - ./docker-run.sh build
+    - ./docker-run.sh qa 75
+  artifacts:
+    reports:
+      junit: reports/*.xml
+    paths:
+      - reports/
+    expire_in: 1 week
+  only:
+    - main
+    - merge_requests
+```
+
+### Kubernetes Deployment
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: code-guard-analysis
+spec:
+  template:
+    spec:
+      containers:
+      - name: code-guard
+        image: code-guard:latest
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: api-key
+        - name: QUALITY_THRESHOLD
+          value: "80"
+        volumeMounts:
+        - name: source-code
+          mountPath: /app/input
+        - name: reports-volume
+          mountPath: /app/reports
+        command: ["qa-automation"]
+      volumes:
+      - name: source-code
+        configMap:
+          name: source-code-config
+      - name: reports-volume
+        persistentVolumeClaim:
+          claimName: reports-pvc
+      restartPolicy: Never
 ```
 
 ## Scoring Algorithm
@@ -228,40 +338,85 @@ openai.max.tokens=2000
 openai.temperature=0.1
 ```
 
+## Docker Deployment
+
+### Quick Start with Docker
+
+1. **Setup environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and set OPENAI_API_KEY
+   ```
+
+2. **Build and run**:
+   ```bash
+   ./docker-run.sh build
+   ./docker-run.sh run
+   ```
+
+### Docker Commands
+
+```bash
+# Build image
+./docker-run.sh build
+
+# Run analysis with default settings
+./docker-run.sh run
+
+# Run QA automation
+./docker-run.sh qa 75
+
+# Run DevOps testing
+./docker-run.sh devops 85
+
+# Use docker-compose profiles
+./docker-run.sh compose qa      # QA environment
+./docker-run.sh compose devops  # DevOps environment
+./docker-run.sh compose dev     # Development environment
+
+# Clean up
+./docker-run.sh clean           # Remove containers
+./docker-run.sh clean --all     # Remove containers and image
+```
+
+### Docker Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `OPENAI_API_KEY` | OpenAI API key (required) | - |
+| `QUALITY_THRESHOLD` | Quality threshold for analysis | 75 |
+| `JAVA_OPTS` | JVM options | `-Xmx512m -Xms256m` |
+| `INPUT_DIR` | Input directory path | `/app/input` |
+| `REPORTS_DIR` | Reports output directory | `/app/reports` |
+| `LOGS_DIR` | Logs directory | `/app/logs` |
+
+### Docker Volumes
+
+- `/app/input` - Mount your source code here (read-only)
+- `/app/reports` - Analysis reports output
+- `/app/logs` - Application logs
+
+### Production Deployment
+
+```bash
+# Build production image
+docker build -t code-guard:prod --target production .
+
+# Run in production mode
+docker run -d \
+  --name code-guard-prod \
+  -e OPENAI_API_KEY="your-api-key" \
+  -e JAVA_OPTS="-Xmx2g -Xms1g" \
+  -v /path/to/source:/app/input:ro \
+  -v /path/to/reports:/app/reports \
+  -v /path/to/logs:/app/logs \
+  --restart unless-stopped \
+  code-guard:prod devops-testing
+```
+
 ## Development
 
-### Project Structure
-
-```
-src/
-├── main/
-│   ├── java/
-│   │   └── com/hackathon/codeguard/
-│   │       ├── CodeGuardApplication.java
-│   │       ├── cli/
-│   │       │   └── CodeGuardCLI.java
-│   │       ├── model/
-│   │       │   ├── AnalysisResult.java
-│   │       │   ├── FileAnalysisResult.java
-│   │       │   └── ReportType.java
-│   │       └── service/
-│   │           ├── CodeAnalysisService.java
-│   │           ├── FileProcessingService.java
-│   │           ├── ReportGenerationService.java
-│   │           └── openai/
-│   │               └── OpenAIAnalysisService.java
-│   └── resources/
-│       ├── application.properties
-│       └── log4j2.properties
-└── test/
-    └── java/
-        └── com/hackathon/codeguard/
-            ├── CodeGuardApplicationTest.java
-            └── service/
-                └── FileProcessingServiceTest.java
-```
-
-### Running Tests
+### Local Development
 
 ```bash
 # Run all tests
@@ -274,17 +429,77 @@ mvn test -Dtest=FileProcessingServiceTest
 mvn clean test jacoco:report
 ```
 
+### Docker Development
+
+```bash
+# Build and run in development mode
+./docker-run.sh compose dev
+
+# Build image for testing
+./docker-run.sh build
+
+# Clean up Docker resources
+./docker-run.sh clean
+
+# View container logs
+./docker-run.sh logs
+
+# Follow logs in real-time
+./docker-run.sh logs -f
+```
+
 ### Building for Production
 
 ```bash
-# Create executable JAR
+# Local JAR build
 mvn clean package
 
-# Skip tests during build
-mvn clean package -DskipTests
+# Docker production build
+./docker-run.sh build
 
 # Create distribution package
 mvn clean package assembly:single
+
+# Build multi-architecture Docker image
+docker buildx build --platform linux/amd64,linux/arm64 -t code-guard:latest --push .
+```
+
+### Project Structure
+
+```
+├── Dockerfile                          # Multi-stage Docker build
+├── docker-compose.yml                  # Docker Compose configuration
+├── docker-run.sh                       # Docker management script
+├── .dockerignore                       # Docker ignore file
+├── .env.example                        # Environment variables template
+├── pom.xml                             # Maven configuration
+├── README.md                           # Documentation
+├── docker/
+│   └── entrypoint.sh                   # Docker entrypoint script
+└── src/
+    ├── main/
+    │   ├── java/com/hackathon/codeguard/
+    │   │   ├── CodeGuardApplication.java
+    │   │   ├── cli/
+    │   │   │   └── CodeGuardCLI.java
+    │   │   ├── model/
+    │   │   │   ├── AnalysisResult.java
+    │   │   │   ├── FileAnalysisResult.java
+    │   │   │   └── ReportType.java
+    │   │   └── service/
+    │   │       ├── CodeAnalysisService.java
+    │   │       ├── FileProcessingService.java
+    │   │       ├── ReportGenerationService.java
+    │   │       └── openai/
+    │   │           └── OpenAIAnalysisService.java
+    │   └── resources/
+    │       ├── application.properties
+    │       └── log4j2.properties
+    └── test/
+        └── java/com/hackathon/codeguard/
+            ├── CodeGuardApplicationTest.java
+            └── service/
+                └── FileProcessingServiceTest.java
 ```
 
 ## Contributing
@@ -316,3 +531,8 @@ For support and questions:
 - CI/CD integration support
 - Multi-language support
 - Quality threshold configuration
+- **Docker support with multi-stage builds**
+- **Docker Compose configurations for different environments**
+- **Docker management script for easy deployment**
+- **Container-based CI/CD pipeline integration**
+- **Production-ready Docker deployment options**
