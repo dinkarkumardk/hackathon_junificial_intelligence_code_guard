@@ -13,6 +13,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Service for generating HTML and JSON reports from analysis results
@@ -339,6 +343,295 @@ public class ReportGenerationService {
             LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         ));
 
+        return html.toString();
+    }
+
+    /**
+     * Generates KT (Knowledge Transfer) documentation for new joiners in HTML format.
+     * Each section is generated as a separate file and linked from index.html in the kt folder.
+     */
+    public void generateKTDocumentation(AnalysisResult result, String outputDir) throws IOException {
+        Path ktDir = Paths.get(outputDir, "kt");
+        Files.createDirectories(ktDir);
+        // Generate each KT section as a separate file, passing AnalysisResult for file-specific details
+        Files.writeString(ktDir.resolve("purpose.html"), buildKTPurposeHtml(result));
+        Files.writeString(ktDir.resolve("design.html"), buildKTDesignHtml(result));
+        Files.writeString(ktDir.resolve("modules.html"), buildKTModulesHtml(result));
+        Files.writeString(ktDir.resolve("dataflow.html"), buildKTDataFlowHtml(result));
+        Files.writeString(ktDir.resolve("execution.html"), buildKTExecutionHtml(result));
+        Files.writeString(ktDir.resolve("tools.html"), buildKTToolsHtml(result));
+        // Generate index.html linking to all KT section files
+        Files.writeString(ktDir.resolve("index.html"), buildKTIndexHtml());
+    }
+
+    private String getKTCommonCss() {
+        return "<style>" +
+            "body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }" +
+            ".container { max-width: 900px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }" +
+            "h1, h2 { color: #007acc; }" +
+            "ul { margin-left: 20px; }" +
+            ".section { margin-bottom: 32px; }" +
+            ".nav { margin-bottom: 24px; }" +
+            ".nav a { margin-right: 16px; color: #007acc; text-decoration: none; font-weight: bold; }" +
+            ".nav a:hover { text-decoration: underline; }" +
+            "</style>";
+    }
+
+    private String buildKTIndexHtml() {
+        return """
+        <!DOCTYPE html>
+        <html lang=\"en\">
+        <head>
+            <meta charset=\"UTF-8\">
+            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+            <title>Knowledge Transfer - Code Guard</title>
+            """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>Knowledge Transfer (KT) Documentation</h1>
+            <ul class=\"nav\" style=\"list-style-type:none; padding:0;\">
+                <li style=\"margin-bottom:16px;\"><a href=\"purpose.html\">Purpose & Goals</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"design.html\">System Design</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"modules.html\">Modules & Business Logic</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"dataflow.html\">Data Flow</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"execution.html\">Report Execution</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"tools.html\">Tools & Tech Stack</a></li>
+            </ul>
+            <div class=\"section\">
+                <p>Welcome! Use the navigation above to explore each KT section. All documents are designed for new joiners and onboarding.</p>
+            </div>
+        </div>
+        </body>
+        </html>
+        """;
+    }
+
+    private String buildKTPurposeHtml(AnalysisResult result) {
+        StringBuilder html = new StringBuilder();
+        html.append("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Purpose & Goals</title>
+        """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class='container'>
+            <h1>Purpose, Key Goals, and Stakeholders</h1>
+            <ul>
+        """);
+        Map<String, List<String>> purposeToFiles = new LinkedHashMap<>();
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String purpose = file.getKtPurpose() != null ? file.getKtPurpose().trim() : "No data from OpenAI.";
+            purposeToFiles.computeIfAbsent(purpose, k -> new ArrayList<>()).add(file.getFilename());
+        }
+        for (Map.Entry<String, List<String>> entry : purposeToFiles.entrySet()) {
+            html.append("<li>")
+                .append(entry.getKey())
+                .append("<br><em>Files: ")
+                .append(String.join(", ", entry.getValue()))
+                .append("</em></li>");
+        }
+        html.append("""
+            </ul>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """);
+        return html.toString();
+    }
+
+    private String buildKTDesignHtml(AnalysisResult result) {
+        StringBuilder html = new StringBuilder();
+        html.append("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - System Design</title>
+        """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>High-Level System Design, Tech Stack, and Component Interactions</h1>
+            <ul>
+        """);
+        Map<String, List<String>> designToFiles = new LinkedHashMap<>();
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String design = file.getKtDesign() != null ? file.getKtDesign().trim() : "No data from OpenAI.";
+            designToFiles.computeIfAbsent(design, k -> new ArrayList<>()).add(file.getFilename());
+        }
+        for (Map.Entry<String, List<String>> entry : designToFiles.entrySet()) {
+            html.append("<li>")
+                .append(entry.getKey())
+                .append("<br><em>Files: ")
+                .append(String.join(", ", entry.getValue()))
+                .append("</em></li>");
+        }
+        html.append("""
+            </ul>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """);
+        return html.toString();
+    }
+
+    private String buildKTModulesHtml(AnalysisResult result) {
+        StringBuilder html = new StringBuilder();
+        html.append("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Modules & Business Logic</title>
+        """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>Functional Overview of Each Module and Key Business Logic</h1>
+            <ul>
+        """);
+        Map<String, List<String>> modulesToFiles = new LinkedHashMap<>();
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String modules = file.getKtModules() != null ? file.getKtModules().trim() : "No data from OpenAI.";
+            modulesToFiles.computeIfAbsent(modules, k -> new ArrayList<>()).add(file.getFilename());
+        }
+        for (Map.Entry<String, List<String>> entry : modulesToFiles.entrySet()) {
+            html.append("<li>")
+                .append(entry.getKey())
+                .append("<br><em>Files: ")
+                .append(String.join(", ", entry.getValue()))
+                .append("</em></li>");
+        }
+        html.append("""
+            </ul>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """);
+        return html.toString();
+    }
+
+    private String buildKTDataFlowHtml(AnalysisResult result) {
+        StringBuilder html = new StringBuilder();
+        html.append("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Data Flow</title>
+        """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>Data Flow</h1>
+            <ul>
+        """);
+        Map<String, List<String>> dataFlowToFiles = new LinkedHashMap<>();
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String dataFlow = file.getKtDataFlow() != null ? file.getKtDataFlow().trim() : "No data from OpenAI.";
+            dataFlowToFiles.computeIfAbsent(dataFlow, k -> new ArrayList<>()).add(file.getFilename());
+        }
+        for (Map.Entry<String, List<String>> entry : dataFlowToFiles.entrySet()) {
+            html.append("<li>")
+                .append(entry.getKey())
+                .append("<br><em>Files: ")
+                .append(String.join(", ", entry.getValue()))
+                .append("</em></li>");
+        }
+        html.append("""
+            </ul>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """);
+        return html.toString();
+    }
+
+    private String buildKTExecutionHtml(AnalysisResult result) {
+        StringBuilder html = new StringBuilder();
+        html.append("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Report Execution</title>
+        """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>Step-by-Step Report Execution</h1>
+            <ul>
+        """);
+        Map<String, List<String>> executionToFiles = new LinkedHashMap<>();
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String execution = file.getKtExecution() != null ? file.getKtExecution().trim() : "No data from OpenAI.";
+            executionToFiles.computeIfAbsent(execution, k -> new ArrayList<>()).add(file.getFilename());
+        }
+        for (Map.Entry<String, List<String>> entry : executionToFiles.entrySet()) {
+            html.append("<li>")
+                .append(entry.getKey())
+                .append("<br><em>Files: ")
+                .append(String.join(", ", entry.getValue()))
+                .append("</em></li>");
+        }
+        html.append("""
+            </ul>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """);
+        return html.toString();
+    }
+
+    private String buildKTToolsHtml(AnalysisResult result) {
+        StringBuilder html = new StringBuilder();
+        html.append("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Tools & Tech Stack</title>
+        """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>Tools, Libraries, External Services, and Version Constraints</h1>
+            <ul>
+        """);
+        Map<String, List<String>> toolsToFiles = new LinkedHashMap<>();
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String tools = file.getKtTools() != null ? file.getKtTools().trim() : "No data from OpenAI.";
+            toolsToFiles.computeIfAbsent(tools, k -> new ArrayList<>()).add(file.getFilename());
+        }
+        for (Map.Entry<String, List<String>> entry : toolsToFiles.entrySet()) {
+            html.append("<li>")
+                .append(entry.getKey())
+                .append("<br><em>Files: ")
+                .append(String.join(", ", entry.getValue()))
+                .append("</em></li>");
+        }
+        html.append("""
+            </ul>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """);
         return html.toString();
     }
 

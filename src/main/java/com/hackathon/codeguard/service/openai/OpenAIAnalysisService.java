@@ -53,7 +53,7 @@ public class OpenAIAnalysisService {
      */
     public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode) throws Exception {
         logger.debug("Analyzing file with OpenAI: {}", filePath);
-        
+
         FileAnalysisResult result = new FileAnalysisResult(
             filePath.getFileName().toString(),
             filePath.toString()
@@ -61,22 +61,28 @@ public class OpenAIAnalysisService {
 
         // Determine programming language
         String language = fileService.determineProgrammingLanguage(filePath);
-        
+
         // Analyze different aspects
         result.setCodeQuality(analyzeCodeQuality(fileContent, language));
         result.setSolid(analyzeSolidPrinciples(fileContent, language));
         result.setDesignPatterns(analyzeDesignPatterns(fileContent, language));
         result.setCleanCode(analyzeCleanCode(fileContent, language));
         result.setSecurity(analyzeSecurity(fileContent, language));
-        
+
+        // Extract KT data using OpenAI (placeholder logic, replace with actual extraction)
+        result.setKtPurpose(analyzeKtPurpose(fileContent, language));
+        result.setKtDesign(analyzeKtDesign(fileContent, language));
+        result.setKtModules(analyzeKtModules(fileContent, language));
+
+
         // Calculate final score
         result.calculateFinalScore();
-        
+
         // Get issues and suggestions
         result.setIssues(identifyIssues(fileContent, language));
         result.setSuggestions(generateSuggestions(fileContent, language, mode));
         result.setMetrics(extractMetrics(fileContent, language));
-        
+
         return result;
     }
 
@@ -285,4 +291,19 @@ public class OpenAIAnalysisService {
             return new HashMap<>();
         }
     }
+
+    // --- Replace extractKt* with analyzeKt* using new prompts ---
+    private String analyzeKtPurpose(String code, String language) throws Exception {
+        String prompt = "Describe the purpose of your system in 2–3 sentences. What is the core problem it aims to solve? Who are the primary users or stakeholders (e.g., end users, developers, admins, business teams)? What are the system's main objectives (e.g., automation, monitoring, data analysis, user experience enhancement)?\n\nCode:\n" + code;
+        return getResponseFromOpenAI(prompt);
+    }
+    private String analyzeKtDesign(String code, String language) throws Exception {
+        String prompt = "Provide a high-level architectural overview of your system. Include:\n- Core components (e.g., frontend, backend, services, databases)\n- Technology stack used (languages, frameworks, tools, infrastructure)\n- How components interact with each other (e.g., API calls, message queues, DB connections)\nIf available, include or reference an architecture diagram.\n\nCode:\n" + code;
+        return getResponseFromOpenAI(prompt);
+    }
+    private String analyzeKtModules(String code, String language) throws Exception {
+        String prompt = "List the major functional modules in your system (e.g., User Management, Payment Processing, Analytics Dashboard). For each:\n- Briefly describe its responsibilities and what it does\n- Highlight any important business logic (e.g., validations, workflows, data rules) that it implements\n\nCode:\n" + code;
+        return getResponseFromOpenAI(prompt);
+    }
+    // Remove extractKt* methods
 }

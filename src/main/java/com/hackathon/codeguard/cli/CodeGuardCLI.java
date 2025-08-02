@@ -110,9 +110,11 @@ public class CodeGuardCLI implements Callable<Integer> {
                 }
             }
 
-            // Generate reports
+            // Generate all reports including KT documentation
             reportService.generateReports(result, outputDir, reportType, format);
-            
+            reportService.generateKTDocumentation(result, outputDir);
+            System.out.println("KT documentation generated in: " + outputDir + "/kt");
+
             System.out.println("Analysis complete. Reports generated in: " + outputDir);
             System.out.println("Overall Score: " + result.getOverallScore());
             
