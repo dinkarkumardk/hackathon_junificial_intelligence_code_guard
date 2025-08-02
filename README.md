@@ -536,3 +536,64 @@ For support and questions:
 - **Docker management script for easy deployment**
 - **Container-based CI/CD pipeline integration**
 - **Production-ready Docker deployment options**
+
+## Quick Docker Build & Report Generation Examples
+
+### Build Docker Image
+
+```bash
+# Build the Docker image
+docker build -t code-guard:latest .
+```
+
+### Run Analysis with Docker
+
+```bash
+# Analyze a folder and generate reports (HTML by default)
+docker run --rm \
+  -e OPENAI_API_KEY="your-openai-api-key" \
+  -v "$(pwd)/src:/app/input:ro" \
+  -v "$(pwd)/reports:/app/reports" \
+  code-guard:latest --scan /app/input
+```
+
+```bash
+# Analyze specific files and generate reports
+docker run --rm \
+  -e OPENAI_API_KEY="your-openai-api-key" \
+  -v "$(pwd)/src:/app/input:ro" \
+  -v "$(pwd)/reports:/app/reports" \
+  code-guard:latest /app/input/File1.java /app/input/File2.js
+```
+
+```bash
+# Generate JSON report for a folder
+docker run --rm \
+  -e OPENAI_API_KEY="your-openai-api-key" \
+  -v "$(pwd)/src:/app/input:ro" \
+  -v "$(pwd)/reports:/app/reports" \
+  code-guard:latest --scan /app/input --format json
+```
+
+```bash
+# Set a custom quality threshold and output directory
+docker run --rm \
+  -e OPENAI_API_KEY="your-openai-api-key" \
+  -v "$(pwd)/src:/app/input:ro" \
+  -v "$(pwd)/custom-reports:/app/reports" \
+  code-guard:latest --scan /app/input --threshold 80 --output /app/reports
+```
+
+## Example: Run Analysis on Sample Test Data
+
+```bash
+# Analyze all files in the test_data folder and generate reports
+docker run --rm \
+  -e OPENAI_API_KEY="your-openai-api-key" \
+  -v "$(pwd)/test_data:/app/input:ro" \
+  -v "$(pwd)/reports:/app/reports" \
+  code-guard:latest --scan /app/input
+```
+
+> This command will analyze all Java files in the `test_data` folder and generate reports in the `reports` directory.
+> Replace `your-openai-api-key` with your actual OpenAI API key.
