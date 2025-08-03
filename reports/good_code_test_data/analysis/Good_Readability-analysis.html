@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good_Readability.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>Good_Readability.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">95.3</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">95.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (95.0/100)</h2>
+<div class="reasoning-text">The code is very readable and maintainable with clear variable names, a well-documented method, and a simple structure. However, the main method could use some comments for better understanding.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add comments to the main method to explain what it does.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add comments to the main method to explain what it does.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to the main method to explain what it does.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using more descriptive class names. &#39;Good_Readability&#39; does not convey the purpose of the class.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Consider using more descriptive class names. &#39;Good_Readability&#39; does not convey the purpose of the class.', this)" data-category="Code Quality Analysis" data-recommendation="Consider using more descriptive class names. &#39;Good_Readability&#39; does not convey the purpose of the class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling or input validation in the calculateArea method.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Consider adding error handling or input validation in the calculateArea method.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding error handling or input validation in the calculateArea method.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the calculateArea method static since it does not depend on any instance variables.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider making the calculateArea method static since it does not depend on any instance variables.', this)" data-category="Code Quality Analysis" data-recommendation="Consider making the calculateArea method static since it does not depend on any instance variables.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a constructor to the class if it is expected to have multiple instances with different properties.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider adding a constructor to the class if it is expected to have multiple instances with different properties.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding a constructor to the class if it is expected to have multiple instances with different properties.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (90.0/100)</h2>
+<div class="reasoning-text">The class Good_Readability is mostly adhering to the Single Responsibility Principle, as it is primarily focused on calculating the area of a rectangle. However, it also includes a main method for testing which could be separated.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Separate the main method into a different class for testing purposes.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Separate the main method into a different class for testing purposes.', this)" data-category="SOLID Principles Analysis" data-recommendation="Separate the main method into a different class for testing purposes.">Fix with AI</button></li>
+<li><span class="recommendation-text">Keep the Good_Readability class solely for the purpose of calculating the area.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Keep the Good_Readability class solely for the purpose of calculating the area.', this)" data-category="SOLID Principles Analysis" data-recommendation="Keep the Good_Readability class solely for the purpose of calculating the area.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider renaming the class to something more descriptive of its function, such as RectangleAreaCalculator.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'Consider renaming the class to something more descriptive of its function, such as RectangleAreaCalculator.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider renaming the class to something more descriptive of its function, such as RectangleAreaCalculator.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the calculateArea method static, as it does not rely on any instance variables.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Consider making the calculateArea method static, as it does not rely on any instance variables.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider making the calculateArea method static, as it does not rely on any instance variables.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that any future additions to this class maintain its single responsibility of calculating areas.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Ensure that any future additions to this class maintain its single responsibility of calculating areas.', this)" data-category="SOLID Principles Analysis" data-recommendation="Ensure that any future additions to this class maintain its single responsibility of calculating areas.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is simple, clean, and well-documented, but it does not demonstrate the use of any design patterns. It could be improved by incorporating some object-oriented principles or design patterns.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider using the Factory pattern if there will be more shapes in the future.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Factory pattern if there will be more shapes in the future.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Factory pattern if there will be more shapes in the future.">Fix with AI</button></li>
+<li><span class="recommendation-text">Encapsulate the rectangle properties (width and height) into a Rectangle class to follow the principle of encapsulation.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Encapsulate the rectangle properties (width and height) into a Rectangle class to follow the principle of encapsulation.', this)" data-category="Design Patterns Analysis" data-recommendation="Encapsulate the rectangle properties (width and height) into a Rectangle class to follow the principle of encapsulation.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using the Strategy pattern if the method of calculating area might change in the future.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Strategy pattern if the method of calculating area might change in the future.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Strategy pattern if the method of calculating area might change in the future.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the calculateArea method static, as it does not depend on any instance variables.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider making the calculateArea method static, as it does not depend on any instance variables.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider making the calculateArea method static, as it does not depend on any instance variables.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add error handling or input validation for the calculateArea method.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Add error handling or input validation for the calculateArea method.', this)" data-category="Design Patterns Analysis" data-recommendation="Add error handling or input validation for the calculateArea method.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (100.0/100)</h2>
+<div class="reasoning-text">The provided Java code is secure as it does not have any security vulnerabilities such as injection flaws, insecure data handling, etc. It is a simple program that calculates the area of a rectangle and does not interact with any external systems or handle sensitive data.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">No recommendations as the code is secure and follows good practices.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'No recommendations as the code is secure and follows good practices.', this)" data-category="Security Analysis" data-recommendation="No recommendations as the code is secure and follows good practices.">Fix with AI</button></li>
+<li><span class="recommendation-text">Continue to follow good coding practices such as clear naming conventions and documentation.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Continue to follow good coding practices such as clear naming conventions and documentation.', this)" data-category="Security Analysis" data-recommendation="Continue to follow good coding practices such as clear naming conventions and documentation.">Fix with AI</button></li>
+<li><span class="recommendation-text">Always consider security implications when adding new features or interacting with external systems.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Always consider security implications when adding new features or interacting with external systems.', this)" data-category="Security Analysis" data-recommendation="Always consider security implications when adding new features or interacting with external systems.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling for invalid inputs.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Consider adding error handling for invalid inputs.', this)" data-category="Security Analysis" data-recommendation="Consider adding error handling for invalid inputs.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using long instead of int for larger numbers.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider using long instead of int for larger numbers.', this)" data-category="Security Analysis" data-recommendation="Consider using long instead of int for larger numbers.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (100.0/100)</h2>
+<div class="reasoning-text">The code is bug-free. It is a simple program that calculates the area of a rectangle and prints it.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">No recommendations as the code is correct and well-written.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'No recommendations as the code is correct and well-written.', this)" data-category="Bug Detection Analysis" data-recommendation="No recommendations as the code is correct and well-written.">Fix with AI</button></li>
+<li><span class="recommendation-text">The code is simple and follows good programming practices.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'The code is simple and follows good programming practices.', this)" data-category="Bug Detection Analysis" data-recommendation="The code is simple and follows good programming practices.">Fix with AI</button></li>
+<li><span class="recommendation-text">The method and variable names are meaningful and the code is well-commented.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'The method and variable names are meaningful and the code is well-commented.', this)" data-category="Bug Detection Analysis" data-recommendation="The method and variable names are meaningful and the code is well-commented.">Fix with AI</button></li>
+<li><span class="recommendation-text">The code is efficient and does not have any unnecessary or redundant parts.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'The code is efficient and does not have any unnecessary or redundant parts.', this)" data-category="Bug Detection Analysis" data-recommendation="The code is efficient and does not have any unnecessary or redundant parts.">Fix with AI</button></li>
+<li><span class="recommendation-text">The code does not have any potential bugs or logical errors.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'The code does not have any potential bugs or logical errors.', this)" data-category="Bug Detection Analysis" data-recommendation="The code does not have any potential bugs or logical errors.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>25.0</td></tr>
+<tr><td>Lines of code</td><td>20</td></tr>
+<tr><td>Number of methods</td><td>2</td></tr>
+<tr><td>Number of classes</td><td>1</td></tr>
+<tr><td>Cyclomatic complexity</td><td>2</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:22:32 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good_HighCohesion.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>Good_HighCohesion.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">89.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">70.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">95.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is simple, clean, and easy to understand. It follows the principle of high cohesion, where each class has a single, well-defined responsibility.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add comments to describe what each class and method does.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add comments to describe what each class and method does.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to describe what each class and method does.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a more robust email validation method, as the current one only checks for the presence of &#39;@&#39;.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Consider using a more robust email validation method, as the current one only checks for the presence of &#39;@&#39;.', this)" data-category="Code Quality Analysis" data-recommendation="Consider using a more robust email validation method, as the current one only checks for the presence of &#39;@&#39;.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider handling the case where the email is not valid.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Consider handling the case where the email is not valid.', this)" data-category="Code Quality Analysis" data-recommendation="Consider handling the case where the email is not valid.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the &#39;sendEmail&#39; method more realistic, as it currently only prints to the console.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider making the &#39;sendEmail&#39; method more realistic, as it currently only prints to the console.', this)" data-category="Code Quality Analysis" data-recommendation="Consider making the &#39;sendEmail&#39; method more realistic, as it currently only prints to the console.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.out.println for better logging management.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider using a logging framework instead of System.out.println for better logging management.', this)" data-category="Code Quality Analysis" data-recommendation="Consider using a logging framework instead of System.out.println for better logging management.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (100.0/100)</h2>
+<div class="reasoning-text">The code adheres excellently to the Single Responsibility Principle. Each class has a single responsibility: EmailSender is responsible for sending emails, and EmailValidator is responsible for validating email addresses.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">No changes are necessary as each class is already focused on a single responsibility.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'No changes are necessary as each class is already focused on a single responsibility.', this)" data-category="SOLID Principles Analysis" data-recommendation="No changes are necessary as each class is already focused on a single responsibility.">Fix with AI</button></li>
+<li><span class="recommendation-text">Continue to keep classes and methods focused on single tasks.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Continue to keep classes and methods focused on single tasks.', this)" data-category="SOLID Principles Analysis" data-recommendation="Continue to keep classes and methods focused on single tasks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid adding unrelated functionality to these classes in the future.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'Avoid adding unrelated functionality to these classes in the future.', this)" data-category="SOLID Principles Analysis" data-recommendation="Avoid adding unrelated functionality to these classes in the future.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider creating separate classes for other email-related tasks, such as composing emails or managing email lists.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Consider creating separate classes for other email-related tasks, such as composing emails or managing email lists.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider creating separate classes for other email-related tasks, such as composing emails or managing email lists.">Fix with AI</button></li>
+<li><span class="recommendation-text">Keep using good naming conventions to clearly indicate what each class and method does.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Keep using good naming conventions to clearly indicate what each class and method does.', this)" data-category="SOLID Principles Analysis" data-recommendation="Keep using good naming conventions to clearly indicate what each class and method does.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code demonstrates good use of the High Cohesion principle, with each class having a single, well-defined responsibility. However, it lacks the use of design patterns.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider using the Factory pattern for creating instances of EmailSender and EmailValidator to provide more flexibility and control over their creation.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Factory pattern for creating instances of EmailSender and EmailValidator to provide more flexibility and control over their creation.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Factory pattern for creating instances of EmailSender and EmailValidator to provide more flexibility and control over their creation.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider implementing the Strategy pattern to allow different validation strategies for the email, making the system more flexible and extensible.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Consider implementing the Strategy pattern to allow different validation strategies for the email, making the system more flexible and extensible.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider implementing the Strategy pattern to allow different validation strategies for the email, making the system more flexible and extensible.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using the Observer pattern to notify other parts of the system when an email is sent, providing more flexibility for future extensions.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Observer pattern to notify other parts of the system when an email is sent, providing more flexibility for future extensions.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Observer pattern to notify other parts of the system when an email is sent, providing more flexibility for future extensions.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider encapsulating the email sending and validation logic into a separate class, following the Facade pattern, to provide a simpler interface to the client.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider encapsulating the email sending and validation logic into a separate class, following the Facade pattern, to provide a simpler interface to the client.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider encapsulating the email sending and validation logic into a separate class, following the Facade pattern, to provide a simpler interface to the client.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling and logging mechanisms to improve the robustness and maintainability of the code.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding error handling and logging mechanisms to improve the robustness and maintainability of the code.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding error handling and logging mechanisms to improve the robustness and maintainability of the code.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (70.0/100)</h2>
+<div class="reasoning-text">The code is relatively secure as it does not have any obvious security vulnerabilities like SQL injection or insecure data handling. However, the email validation is very basic and could be improved.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Improve the email validation to check for more conditions, such as the presence of a domain after &#39;@&#39;.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Improve the email validation to check for more conditions, such as the presence of a domain after &#39;@&#39;.', this)" data-category="Security Analysis" data-recommendation="Improve the email validation to check for more conditions, such as the presence of a domain after &#39;@&#39;.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a library or built-in function for email validation, as they are likely to be more comprehensive and reliable.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Consider using a library or built-in function for email validation, as they are likely to be more comprehensive and reliable.', this)" data-category="Security Analysis" data-recommendation="Consider using a library or built-in function for email validation, as they are likely to be more comprehensive and reliable.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid printing sensitive information like email addresses to the console or logs, as it could be accessed by unauthorized users.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Avoid printing sensitive information like email addresses to the console or logs, as it could be accessed by unauthorized users.', this)" data-category="Security Analysis" data-recommendation="Avoid printing sensitive information like email addresses to the console or logs, as it could be accessed by unauthorized users.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider implementing a way to handle failed email validation, such as an error message.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Consider implementing a way to handle failed email validation, such as an error message.', this)" data-category="Security Analysis" data-recommendation="Consider implementing a way to handle failed email validation, such as an error message.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider encrypting the email message to protect it in transit.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider encrypting the email message to protect it in transit.', this)" data-category="Security Analysis" data-recommendation="Consider encrypting the email message to protect it in transit.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (95.0/100)</h2>
+<div class="reasoning-text">The code is mostly bug-free, but the email validation is very basic and may not catch all invalid email formats.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Improve the email validation logic to catch more invalid email formats.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Improve the email validation logic to catch more invalid email formats.', this)" data-category="Bug Detection Analysis" data-recommendation="Improve the email validation logic to catch more invalid email formats.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider handling the case where the email fails validation.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Consider handling the case where the email fails validation.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider handling the case where the email fails validation.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling or logging for the sendEmail method in case it fails.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding error handling or logging for the sendEmail method in case it fails.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding error handling or logging for the sendEmail method in case it fails.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the EmailSender and EmailValidator methods static if they don&#39;t need to maintain any state.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider making the EmailSender and EmailValidator methods static if they don&#39;t need to maintain any state.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider making the EmailSender and EmailValidator methods static if they don&#39;t need to maintain any state.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding null checks for the &#39;recipient&#39; and &#39;message&#39; parameters in the sendEmail method.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding null checks for the &#39;recipient&#39; and &#39;message&#39; parameters in the sendEmail method.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding null checks for the &#39;recipient&#39; and &#39;message&#39; parameters in the sendEmail method.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>5.0</td></tr>
+<tr><td>Lines of code</td><td>20</td></tr>
+<tr><td>Number of methods</td><td>3</td></tr>
+<tr><td>Number of classes</td><td>3</td></tr>
+<tr><td>Cyclomatic complexity</td><td>2</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:22:32 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

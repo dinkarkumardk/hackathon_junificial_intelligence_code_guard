@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good_Robustness.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>Good_Robustness.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">90.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code is simple, readable, and handles the divide by zero error, but lacks proper documentation and could be improved in terms of error handling.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add comments to explain the purpose of the class and its methods.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add comments to explain the purpose of the class and its methods.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to explain the purpose of the class and its methods.">Fix with AI</button></li>
+<li><span class="recommendation-text">Instead of printing an error message and returning 0 when a division by zero occurs, consider throwing an exception to allow the calling code to handle the error.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Instead of printing an error message and returning 0 when a division by zero occurs, consider throwing an exception to allow the calling code to handle the error.', this)" data-category="Code Quality Analysis" data-recommendation="Instead of printing an error message and returning 0 when a division by zero occurs, consider throwing an exception to allow the calling code to handle the error.">Fix with AI</button></li>
+<li><span class="recommendation-text">The main method is testing the safeDivide method, consider moving this to a separate test class.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'The main method is testing the safeDivide method, consider moving this to a separate test class.', this)" data-category="Code Quality Analysis" data-recommendation="The main method is testing the safeDivide method, consider moving this to a separate test class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Use meaningful variable names instead of &#39;a&#39; and &#39;b&#39;.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Use meaningful variable names instead of &#39;a&#39; and &#39;b&#39;.', this)" data-category="Code Quality Analysis" data-recommendation="Use meaningful variable names instead of &#39;a&#39; and &#39;b&#39;.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using logging instead of System.err.println for error messages.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider using logging instead of System.err.println for error messages.', this)" data-category="Code Quality Analysis" data-recommendation="Consider using logging instead of System.err.println for error messages.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (90.0/100)</h2>
+<div class="reasoning-text">The class Good_Robustness and its methods adhere to the Single Responsibility Principle quite well, but it does mix business logic with error handling and console output.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Separate the error handling and console output from the safeDivide method.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Separate the error handling and console output from the safeDivide method.', this)" data-category="SOLID Principles Analysis" data-recommendation="Separate the error handling and console output from the safeDivide method.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider creating a separate class or method for error handling.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Consider creating a separate class or method for error handling.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider creating a separate class or method for error handling.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider creating a separate class or method for console output.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'Consider creating a separate class or method for console output.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider creating a separate class or method for console output.">Fix with AI</button></li>
+<li><span class="recommendation-text">The main method could be in a separate class responsible for running the application.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'The main method could be in a separate class responsible for running the application.', this)" data-category="SOLID Principles Analysis" data-recommendation="The main method could be in a separate class responsible for running the application.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider throwing an exception instead of returning 0 when division by zero is attempted.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Consider throwing an exception instead of returning 0 when division by zero is attempted.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider throwing an exception instead of returning 0 when division by zero is attempted.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code is simple and robust, handling the potential error of division by zero. However, it does not use any design patterns and could be improved by throwing an exception instead of returning zero when division by zero is attempted.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider using the Strategy pattern to handle different division strategies.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Strategy pattern to handle different division strategies.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Strategy pattern to handle different division strategies.">Fix with AI</button></li>
+<li><span class="recommendation-text">Throw an ArithmeticException instead of returning zero when division by zero is attempted.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Throw an ArithmeticException instead of returning zero when division by zero is attempted.', this)" data-category="Design Patterns Analysis" data-recommendation="Throw an ArithmeticException instead of returning zero when division by zero is attempted.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.err.println for error messages.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a logging framework instead of System.err.println for error messages.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a logging framework instead of System.err.println for error messages.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the safeDivide method static since it does not depend on any instance variables.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider making the safeDivide method static since it does not depend on any instance variables.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider making the safeDivide method static since it does not depend on any instance variables.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using unit tests to ensure the safeDivide method works as expected.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider using unit tests to ensure the safeDivide method works as expected.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using unit tests to ensure the safeDivide method works as expected.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is generally secure and follows good practices, but it could be improved by throwing an exception instead of returning a value when division by zero is attempted.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Throw an ArithmeticException when division by zero is attempted instead of returning a value.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Throw an ArithmeticException when division by zero is attempted instead of returning a value.', this)" data-category="Security Analysis" data-recommendation="Throw an ArithmeticException when division by zero is attempted instead of returning a value.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using logging instead of System.err.println for error messages.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Consider using logging instead of System.err.println for error messages.', this)" data-category="Security Analysis" data-recommendation="Consider using logging instead of System.err.println for error messages.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to explain the purpose of the methods and the reason for the error handling.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Add comments to explain the purpose of the methods and the reason for the error handling.', this)" data-category="Security Analysis" data-recommendation="Add comments to explain the purpose of the methods and the reason for the error handling.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding unit tests to ensure the method behaves as expected.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Consider adding unit tests to ensure the method behaves as expected.', this)" data-category="Security Analysis" data-recommendation="Consider adding unit tests to ensure the method behaves as expected.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a more descriptive name for the &#39;safeDivide&#39; method.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider using a more descriptive name for the &#39;safeDivide&#39; method.', this)" data-category="Security Analysis" data-recommendation="Consider using a more descriptive name for the &#39;safeDivide&#39; method.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (100.0/100)</h2>
+<div class="reasoning-text">The code is bug-free. It correctly handles the potential division by zero error.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider throwing an exception instead of returning 0 when division by zero is attempted.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Consider throwing an exception instead of returning 0 when division by zero is attempted.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider throwing an exception instead of returning 0 when division by zero is attempted.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to explain the purpose of the methods and the overall class.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Add comments to explain the purpose of the methods and the overall class.', this)" data-category="Bug Detection Analysis" data-recommendation="Add comments to explain the purpose of the methods and the overall class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding more test cases in the main method to thoroughly test the safeDivide method.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding more test cases in the main method to thoroughly test the safeDivide method.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding more test cases in the main method to thoroughly test the safeDivide method.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.err.println for error messages.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider using a logging framework instead of System.err.println for error messages.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider using a logging framework instead of System.err.println for error messages.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding input validation for the parameters of the safeDivide method.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding input validation for the parameters of the safeDivide method.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding input validation for the parameters of the safeDivide method.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>11.76</td></tr>
+<tr><td>Lines of code</td><td>17</td></tr>
+<tr><td>Number of methods</td><td>2</td></tr>
+<tr><td>Number of classes</td><td>1</td></tr>
+<tr><td>Cyclomatic complexity</td><td>2</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:22:32 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

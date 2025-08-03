@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResponsibilityAssignment.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>ResponsibilityAssignment.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">54.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-red">Low Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">60.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">20.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">20.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">70.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (60.0/100)</h2>
+<div class="reasoning-text">The code is simple and easy to read, but it violates the Single Responsibility Principle, which can make it harder to maintain and test. There is also no documentation or comments explaining what the method or class does.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Split the &#39;handleEverything&#39; method into separate methods for processing, saving, and sending data.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Split the &#39;handleEverything&#39; method into separate methods for processing, saving, and sending data.', this)" data-category="Code Quality Analysis" data-recommendation="Split the &#39;handleEverything&#39; method into separate methods for processing, saving, and sending data.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to explain what each method does.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Add comments to explain what each method does.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to explain what each method does.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add a class-level comment to explain what the class is for.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Add a class-level comment to explain what the class is for.', this)" data-category="Code Quality Analysis" data-recommendation="Add a class-level comment to explain what the class is for.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling or logging to help with debugging.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider adding error handling or logging to help with debugging.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding error handling or logging to help with debugging.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using more descriptive method and class names.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider using more descriptive method and class names.', this)" data-category="Code Quality Analysis" data-recommendation="Consider using more descriptive method and class names.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (20.0/100)</h2>
+<div class="reasoning-text">The class and method are not following the Single Responsibility Principle as the method &#39;handleEverything&#39; is doing multiple tasks such as processing, saving, and sending data.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Split the &#39;handleEverything&#39; method into separate methods each handling one task.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Split the &#39;handleEverything&#39; method into separate methods each handling one task.', this)" data-category="SOLID Principles Analysis" data-recommendation="Split the &#39;handleEverything&#39; method into separate methods each handling one task.">Fix with AI</button></li>
+<li><span class="recommendation-text">Create separate classes for processing, saving, and sending data.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Create separate classes for processing, saving, and sending data.', this)" data-category="SOLID Principles Analysis" data-recommendation="Create separate classes for processing, saving, and sending data.">Fix with AI</button></li>
+<li><span class="recommendation-text">Each class should have methods related to its own responsibility.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'Each class should have methods related to its own responsibility.', this)" data-category="SOLID Principles Analysis" data-recommendation="Each class should have methods related to its own responsibility.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid having a method or class that &#39;handles everything&#39;.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Avoid having a method or class that &#39;handles everything&#39;.', this)" data-category="SOLID Principles Analysis" data-recommendation="Avoid having a method or class that &#39;handles everything&#39;.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using interfaces or abstract classes to define the responsibilities of each class.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Consider using interfaces or abstract classes to define the responsibilities of each class.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider using interfaces or abstract classes to define the responsibilities of each class.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (20.0/100)</h2>
+<div class="reasoning-text">The code violates the Single Responsibility Principle (SRP) as the &#39;handleEverything&#39; method is responsible for processing, saving, and sending data. This makes the code less maintainable, harder to test, and more prone to bugs.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Refactor the &#39;handleEverything&#39; method into separate methods for processing, saving, and sending data.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Refactor the &#39;handleEverything&#39; method into separate methods for processing, saving, and sending data.', this)" data-category="Design Patterns Analysis" data-recommendation="Refactor the &#39;handleEverything&#39; method into separate methods for processing, saving, and sending data.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using the Command pattern to encapsulate each operation (processing, saving, sending) in a separate object.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Command pattern to encapsulate each operation (processing, saving, sending) in a separate object.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Command pattern to encapsulate each operation (processing, saving, sending) in a separate object.">Fix with AI</button></li>
+<li><span class="recommendation-text">Create separate classes for each responsibility if they are complex enough to warrant it.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Create separate classes for each responsibility if they are complex enough to warrant it.', this)" data-category="Design Patterns Analysis" data-recommendation="Create separate classes for each responsibility if they are complex enough to warrant it.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using dependency injection to provide the dependencies of the &#39;ResponsibilityAssignment&#39; class, making it easier to test.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider using dependency injection to provide the dependencies of the &#39;ResponsibilityAssignment&#39; class, making it easier to test.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using dependency injection to provide the dependencies of the &#39;ResponsibilityAssignment&#39; class, making it easier to test.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that each class and method has a single, well-defined responsibility to improve maintainability and testability.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Ensure that each class and method has a single, well-defined responsibility to improve maintainability and testability.', this)" data-category="Design Patterns Analysis" data-recommendation="Ensure that each class and method has a single, well-defined responsibility to improve maintainability and testability.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (70.0/100)</h2>
+<div class="reasoning-text">The code does not have any explicit security vulnerabilities like injection flaws, but it does not follow the principle of separation of concerns, which can lead to maintenance issues and potential security risks in the future. Also, it directly prints the input data to the console, which could potentially expose sensitive information.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Separate the responsibilities into different methods or classes to follow the principle of separation of concerns.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Separate the responsibilities into different methods or classes to follow the principle of separation of concerns.', this)" data-category="Security Analysis" data-recommendation="Separate the responsibilities into different methods or classes to follow the principle of separation of concerns.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid directly printing potentially sensitive data to the console.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Avoid directly printing potentially sensitive data to the console.', this)" data-category="Security Analysis" data-recommendation="Avoid directly printing potentially sensitive data to the console.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider implementing input validation to ensure that the data is in the expected format.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Consider implementing input validation to ensure that the data is in the expected format.', this)" data-category="Security Analysis" data-recommendation="Consider implementing input validation to ensure that the data is in the expected format.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider implementing logging instead of using System.out.println for better control over what gets printed and where.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Consider implementing logging instead of using System.out.println for better control over what gets printed and where.', this)" data-category="Security Analysis" data-recommendation="Consider implementing logging instead of using System.out.println for better control over what gets printed and where.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider implementing error handling to handle potential exceptions that may occur during the processing, saving, or sending of the data.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider implementing error handling to handle potential exceptions that may occur during the processing, saving, or sending of the data.', this)" data-category="Security Analysis" data-recommendation="Consider implementing error handling to handle potential exceptions that may occur during the processing, saving, or sending of the data.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is mostly fine, but it does not handle the case where the input string &#39;data&#39; is null, which would cause a NullPointerException.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add a null check for the &#39;data&#39; parameter at the beginning of the method.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Add a null check for the &#39;data&#39; parameter at the beginning of the method.', this)" data-category="Bug Detection Analysis" data-recommendation="Add a null check for the &#39;data&#39; parameter at the beginning of the method.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider breaking down the &#39;handleEverything&#39; method into smaller methods, each with a single responsibility.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Consider breaking down the &#39;handleEverything&#39; method into smaller methods, each with a single responsibility.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider breaking down the &#39;handleEverything&#39; method into smaller methods, each with a single responsibility.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling or logging to handle potential issues during processing, saving, or sending.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding error handling or logging to handle potential issues during processing, saving, or sending.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding error handling or logging to handle potential issues during processing, saving, or sending.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding unit tests to ensure the method behaves as expected.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding unit tests to ensure the method behaves as expected.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding unit tests to ensure the method behaves as expected.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding JavaDoc comments to the method to explain what it does and what the parameters are.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding JavaDoc comments to the method to explain what it does and what the parameters are.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding JavaDoc comments to the method to explain what it does and what the parameters are.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>11.11</td></tr>
+<tr><td>Lines of code</td><td>9</td></tr>
+<tr><td>Number of methods</td><td>1</td></tr>
+<tr><td>Number of classes</td><td>1</td></tr>
+<tr><td>Cyclomatic complexity</td><td>1</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:48:04 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

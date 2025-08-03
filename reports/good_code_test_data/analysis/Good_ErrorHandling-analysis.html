@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good_ErrorHandling.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>Good_ErrorHandling.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">86.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">80.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code is well-structured, readable, and has good error handling. However, it lacks comments explaining the purpose of the code and the functionality of the methods, which can make it harder for other developers to understand.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add a comment at the beginning of the class explaining its purpose.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add a comment at the beginning of the class explaining its purpose.', this)" data-category="Code Quality Analysis" data-recommendation="Add a comment at the beginning of the class explaining its purpose.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to the &#39;processFile&#39; method explaining what it does and what its parameters are.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Add comments to the &#39;processFile&#39; method explaining what it does and what its parameters are.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to the &#39;processFile&#39; method explaining what it does and what its parameters are.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider replacing &#39;System.err.println&#39; with a logging framework, which would provide more flexibility and control over error reporting.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Consider replacing &#39;System.err.println&#39; with a logging framework, which would provide more flexibility and control over error reporting.', this)" data-category="Code Quality Analysis" data-recommendation="Consider replacing &#39;System.err.println&#39; with a logging framework, which would provide more flexibility and control over error reporting.">Fix with AI</button></li>
+<li><span class="recommendation-text">The main method is currently testing the &#39;processFile&#39; method. It would be better to move this testing to a separate unit test.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'The main method is currently testing the &#39;processFile&#39; method. It would be better to move this testing to a separate unit test.', this)" data-category="Code Quality Analysis" data-recommendation="The main method is currently testing the &#39;processFile&#39; method. It would be better to move this testing to a separate unit test.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider throwing exceptions instead of just logging the errors, depending on the use case of this class.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider throwing exceptions instead of just logging the errors, depending on the use case of this class.', this)" data-category="Code Quality Analysis" data-recommendation="Consider throwing exceptions instead of just logging the errors, depending on the use case of this class.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (90.0/100)</h2>
+<div class="reasoning-text">The class Good_ErrorHandling adheres to the Single Responsibility Principle quite well, as it is primarily responsible for processing a file and handling any errors that may occur during this process. However, it also prints the content of the file, which could be considered a separate responsibility.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Separate the responsibility of printing the file content into a different method or class.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Separate the responsibility of printing the file content into a different method or class.', this)" data-category="SOLID Principles Analysis" data-recommendation="Separate the responsibility of printing the file content into a different method or class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider creating a separate class for error handling.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Consider creating a separate class for error handling.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider creating a separate class for error handling.">Fix with AI</button></li>
+<li><span class="recommendation-text">The main method could be moved to a separate &#39;Driver&#39; class to separate the responsibilities of running the program and processing the file.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'The main method could be moved to a separate &#39;Driver&#39; class to separate the responsibilities of running the program and processing the file.', this)" data-category="SOLID Principles Analysis" data-recommendation="The main method could be moved to a separate &#39;Driver&#39; class to separate the responsibilities of running the program and processing the file.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.err.println for better error handling and tracking.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Consider using a logging framework instead of System.err.println for better error handling and tracking.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider using a logging framework instead of System.err.println for better error handling and tracking.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider throwing the exceptions to the caller method instead of handling them within the processFile method, this would make the method more reusable.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Consider throwing the exceptions to the caller method instead of handling them within the processFile method, this would make the method more reusable.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider throwing the exceptions to the caller method instead of handling them within the processFile method, this would make the method more reusable.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code demonstrates good error handling practices, but it lacks the use of design patterns. The code could be improved by implementing a strategy pattern for handling different types of errors.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider implementing a strategy pattern for handling different types of errors. This would make the code more flexible and easier to maintain.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider implementing a strategy pattern for handling different types of errors. This would make the code more flexible and easier to maintain.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider implementing a strategy pattern for handling different types of errors. This would make the code more flexible and easier to maintain.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework like Log4j instead of System.err.println for error messages. This would provide more control over the output and make it easier to manage and analyze the logs.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a logging framework like Log4j instead of System.err.println for error messages. This would provide more control over the output and make it easier to manage and analyze the logs.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a logging framework like Log4j instead of System.err.println for error messages. This would provide more control over the output and make it easier to manage and analyze the logs.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider separating the file reading and processing logic into separate methods. This would make the code more modular and easier to test.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider separating the file reading and processing logic into separate methods. This would make the code more modular and easier to test.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider separating the file reading and processing logic into separate methods. This would make the code more modular and easier to test.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using dependency injection to provide the file path. This would make the code more flexible and easier to test.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider using dependency injection to provide the file path. This would make the code more flexible and easier to test.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using dependency injection to provide the file path. This would make the code more flexible and easier to test.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a factory pattern to create the BufferedReader. This would make the code more flexible and easier to maintain.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a factory pattern to create the BufferedReader. This would make the code more flexible and easier to maintain.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a factory pattern to create the BufferedReader. This would make the code more flexible and easier to maintain.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (80.0/100)</h2>
+<div class="reasoning-text">The code is generally secure with good error handling, but it lacks input validation and does not handle potential security risks associated with file paths. It also exposes sensitive information through error messages.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Implement input validation to ensure the file path is in a correct and safe format.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Implement input validation to ensure the file path is in a correct and safe format.', this)" data-category="Security Analysis" data-recommendation="Implement input validation to ensure the file path is in a correct and safe format.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid exposing sensitive information in error messages, such as the file path or specific error details.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Avoid exposing sensitive information in error messages, such as the file path or specific error details.', this)" data-category="Security Analysis" data-recommendation="Avoid exposing sensitive information in error messages, such as the file path or specific error details.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework to log errors instead of printing them to the console.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Consider using a logging framework to log errors instead of printing them to the console.', this)" data-category="Security Analysis" data-recommendation="Consider using a logging framework to log errors instead of printing them to the console.">Fix with AI</button></li>
+<li><span class="recommendation-text">Use a secure method to open files, such as java.nio.file.Files.newBufferedReader, to mitigate potential security risks.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Use a secure method to open files, such as java.nio.file.Files.newBufferedReader, to mitigate potential security risks.', this)" data-category="Security Analysis" data-recommendation="Use a secure method to open files, such as java.nio.file.Files.newBufferedReader, to mitigate potential security risks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a security manager to restrict access to certain files or directories.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider using a security manager to restrict access to certain files or directories.', this)" data-category="Security Analysis" data-recommendation="Consider using a security manager to restrict access to certain files or directories.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is mostly correct and handles errors well, but it does not check if the file &#39;data.txt&#39; exists before trying to open it, which could lead to a FileNotFoundException.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add a check to see if the file exists before trying to open it.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Add a check to see if the file exists before trying to open it.', this)" data-category="Bug Detection Analysis" data-recommendation="Add a check to see if the file exists before trying to open it.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a more specific error message for FileNotFoundException, such as &#39;File not found at path: &#39; + filePath.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Consider using a more specific error message for FileNotFoundException, such as &#39;File not found at path: &#39; + filePath.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider using a more specific error message for FileNotFoundException, such as &#39;File not found at path: &#39; + filePath.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider handling the case where the file is empty.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider handling the case where the file is empty.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider handling the case where the file is empty.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a finally block to ensure any resources are closed if an exception is thrown.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding a finally block to ensure any resources are closed if an exception is thrown.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding a finally block to ensure any resources are closed if an exception is thrown.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding more specific error handling for different types of IOExceptions.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding more specific error handling for different types of IOExceptions.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding more specific error handling for different types of IOExceptions.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>7.69</td></tr>
+<tr><td>Lines of code</td><td>26</td></tr>
+<tr><td>Number of methods</td><td>2</td></tr>
+<tr><td>Number of classes</td><td>1</td></tr>
+<tr><td>Cyclomatic complexity</td><td>5</td></tr>
+<tr><td>Code complexity</td><td>MEDIUM</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:22:32 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

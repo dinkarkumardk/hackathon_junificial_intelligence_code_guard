@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>main.ts - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>main.ts</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">87.8</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code is quite clean, readable, and maintainable. However, it lacks comments and documentation which could make it more understandable for other developers.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add comments to explain what each part of the code does, especially for complex or non-obvious parts.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add comments to explain what each part of the code does, especially for complex or non-obvious parts.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to explain what each part of the code does, especially for complex or non-obvious parts.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a docstring to the bootstrap function to explain its purpose and its parameters.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Consider adding a docstring to the bootstrap function to explain its purpose and its parameters.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding a docstring to the bootstrap function to explain its purpose and its parameters.">Fix with AI</button></li>
+<li><span class="recommendation-text">Handle the potential error that could occur if the &#39;PORT&#39; configuration is not set and the default value (9000) is already in use.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Handle the potential error that could occur if the &#39;PORT&#39; configuration is not set and the default value (9000) is already in use.', this)" data-category="Code Quality Analysis" data-recommendation="Handle the potential error that could occur if the &#39;PORT&#39; configuration is not set and the default value (9000) is already in use.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding type annotations to the error parameter in the catch block for better type safety.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider adding type annotations to the error parameter in the catch block for better type safety.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding type annotations to the error parameter in the catch block for better type safety.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider separating concerns by moving the error handling to a separate function.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider separating concerns by moving the error handling to a separate function.', this)" data-category="Code Quality Analysis" data-recommendation="Consider separating concerns by moving the error handling to a separate function.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code generally adheres to the Single Responsibility Principle. Each function and class is focused on a single task. However, the bootstrap function is handling both the application setup and error handling.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Separate the error handling into a different function or class.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Separate the error handling into a different function or class.', this)" data-category="SOLID Principles Analysis" data-recommendation="Separate the error handling into a different function or class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider creating a separate function or class for setting up the application (e.g., setting the global prefix, enabling CORS).</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Consider creating a separate function or class for setting up the application (e.g., setting the global prefix, enabling CORS).', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider creating a separate function or class for setting up the application (e.g., setting the global prefix, enabling CORS).">Fix with AI</button></li>
+<li><span class="recommendation-text">The bootstrap function could be simplified to only handle the creation of the application and delegate other responsibilities.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'The bootstrap function could be simplified to only handle the creation of the application and delegate other responsibilities.', this)" data-category="SOLID Principles Analysis" data-recommendation="The bootstrap function could be simplified to only handle the creation of the application and delegate other responsibilities.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider creating a separate ConfigService class that handles all configuration-related tasks.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Consider creating a separate ConfigService class that handles all configuration-related tasks.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider creating a separate ConfigService class that handles all configuration-related tasks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using dependency injection for the ConfigService to further decouple the responsibilities.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Consider using dependency injection for the ConfigService to further decouple the responsibilities.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider using dependency injection for the ConfigService to further decouple the responsibilities.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is well-structured and follows the standard conventions of a NestJS application. However, error handling could be improved.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider using a global exception filter for better error handling.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a global exception filter for better error handling.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a global exception filter for better error handling.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add a logger service to log errors and other important information.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Add a logger service to log errors and other important information.', this)" data-category="Design Patterns Analysis" data-recommendation="Add a logger service to log errors and other important information.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using environment variables for setting the port number instead of hardcoding it.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using environment variables for setting the port number instead of hardcoding it.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using environment variables for setting the port number instead of hardcoding it.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a health check endpoint for monitoring the application&#39;s status.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding a health check endpoint for monitoring the application&#39;s status.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding a health check endpoint for monitoring the application&#39;s status.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding Swagger for API documentation.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding Swagger for API documentation.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding Swagger for API documentation.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code is generally secure, but it enables CORS without any restrictions, which can expose the application to certain types of attacks. Also, it does not handle errors in a secure way, potentially revealing sensitive information.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider restricting CORS to specific origins to prevent potential cross-site request forgery (CSRF) or other cross-site attacks.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Consider restricting CORS to specific origins to prevent potential cross-site request forgery (CSRF) or other cross-site attacks.', this)" data-category="Security Analysis" data-recommendation="Consider restricting CORS to specific origins to prevent potential cross-site request forgery (CSRF) or other cross-site attacks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Implement proper error handling and logging to avoid revealing sensitive information in error messages.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Implement proper error handling and logging to avoid revealing sensitive information in error messages.', this)" data-category="Security Analysis" data-recommendation="Implement proper error handling and logging to avoid revealing sensitive information in error messages.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using HTTPS for secure communication to prevent man-in-the-middle attacks.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Consider using HTTPS for secure communication to prevent man-in-the-middle attacks.', this)" data-category="Security Analysis" data-recommendation="Consider using HTTPS for secure communication to prevent man-in-the-middle attacks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that the &#39;PORT&#39; configuration value is validated and sanitized to prevent potential security issues.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Ensure that the &#39;PORT&#39; configuration value is validated and sanitized to prevent potential security issues.', this)" data-category="Security Analysis" data-recommendation="Ensure that the &#39;PORT&#39; configuration value is validated and sanitized to prevent potential security issues.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a security middleware like helmet to add some security headers and protect the app from well-known web vulnerabilities.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider using a security middleware like helmet to add some security headers and protect the app from well-known web vulnerabilities.', this)" data-category="Security Analysis" data-recommendation="Consider using a security middleware like helmet to add some security headers and protect the app from well-known web vulnerabilities.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code seems to be mostly correct, but there is a potential issue if the &#39;PORT&#39; configuration is not set or is set to an invalid value.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Ensure that the &#39;PORT&#39; configuration is always set to a valid number.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Ensure that the &#39;PORT&#39; configuration is always set to a valid number.', this)" data-category="Bug Detection Analysis" data-recommendation="Ensure that the &#39;PORT&#39; configuration is always set to a valid number.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add error handling for the case where &#39;NestFactory.create&#39; fails.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Add error handling for the case where &#39;NestFactory.create&#39; fails.', this)" data-category="Bug Detection Analysis" data-recommendation="Add error handling for the case where &#39;NestFactory.create&#39; fails.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding logging to help with debugging.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding logging to help with debugging.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding logging to help with debugging.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding type checks or assertions to ensure that the &#39;PORT&#39; configuration is a number.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding type checks or assertions to ensure that the &#39;PORT&#39; configuration is a number.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding type checks or assertions to ensure that the &#39;PORT&#39; configuration is a number.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a default value for the &#39;PORT&#39; configuration in case it is not set.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding a default value for the &#39;PORT&#39; configuration in case it is not set.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding a default value for the &#39;PORT&#39; configuration in case it is not set.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>0.0</td></tr>
+<tr><td>Lines of code</td><td>16</td></tr>
+<tr><td>Number of methods</td><td>2</td></tr>
+<tr><td>Number of classes</td><td>0</td></tr>
+<tr><td>Cyclomatic complexity</td><td>2</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 12:58:17 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

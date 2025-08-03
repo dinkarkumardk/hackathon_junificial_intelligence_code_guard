@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good_CodeSmells.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>Good_CodeSmells.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">90.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is simple, clean, and easy to understand. However, it lacks comments explaining the purpose of the class and its methods, which could make it harder for other developers to understand.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add a comment at the top of the class explaining its purpose.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add a comment at the top of the class explaining its purpose.', this)" data-category="Code Quality Analysis" data-recommendation="Add a comment at the top of the class explaining its purpose.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments above each method explaining what they do.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Add comments above each method explaining what they do.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments above each method explaining what they do.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a toString() method for easier debugging.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Consider adding a toString() method for easier debugging.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding a toString() method for easier debugging.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding null checks or assertions in the constructor to ensure the &#39;name&#39; parameter is not null.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider adding null checks or assertions in the constructor to ensure the &#39;name&#39; parameter is not null.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding null checks or assertions in the constructor to ensure the &#39;name&#39; parameter is not null.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the &#39;greet&#39; method more flexible by allowing it to accept a name as a parameter, instead of relying on the instance variable &#39;name&#39;.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider making the &#39;greet&#39; method more flexible by allowing it to accept a name as a parameter, instead of relying on the instance variable &#39;name&#39;.', this)" data-category="Code Quality Analysis" data-recommendation="Consider making the &#39;greet&#39; method more flexible by allowing it to accept a name as a parameter, instead of relying on the instance variable &#39;name&#39;.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (90.0/100)</h2>
+<div class="reasoning-text">The class Good_CodeSmells has a single responsibility of greeting a given name, but the main method is also included in the class which is not its responsibility.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Remove the main method from the Good_CodeSmells class.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Remove the main method from the Good_CodeSmells class.', this)" data-category="SOLID Principles Analysis" data-recommendation="Remove the main method from the Good_CodeSmells class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Create a separate class for the main method.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Create a separate class for the main method.', this)" data-category="SOLID Principles Analysis" data-recommendation="Create a separate class for the main method.">Fix with AI</button></li>
+<li><span class="recommendation-text">In the new class, create an instance of Good_CodeSmells and call the greet method.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'In the new class, create an instance of Good_CodeSmells and call the greet method.', this)" data-category="SOLID Principles Analysis" data-recommendation="In the new class, create an instance of Good_CodeSmells and call the greet method.">Fix with AI</button></li>
+<li><span class="recommendation-text">Keep the Good_CodeSmells class focused on its single responsibility of greeting.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Keep the Good_CodeSmells class focused on its single responsibility of greeting.', this)" data-category="SOLID Principles Analysis" data-recommendation="Keep the Good_CodeSmells class focused on its single responsibility of greeting.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that each class in your program has a single responsibility to adhere to the Single Responsibility Principle.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Ensure that each class in your program has a single responsibility to adhere to the Single Responsibility Principle.', this)" data-category="SOLID Principles Analysis" data-recommendation="Ensure that each class in your program has a single responsibility to adhere to the Single Responsibility Principle.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is simple and clean, following good practices such as encapsulation and immutability. However, it lacks flexibility and extensibility, as it does not use any design patterns.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider using a Factory pattern for object creation if the instantiation process is likely to become more complex in the future.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a Factory pattern for object creation if the instantiation process is likely to become more complex in the future.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a Factory pattern for object creation if the instantiation process is likely to become more complex in the future.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a Strategy pattern if different greeting behaviors are expected in the future.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a Strategy pattern if different greeting behaviors are expected in the future.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a Strategy pattern if different greeting behaviors are expected in the future.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a Singleton pattern if only one instance of Good_CodeSmells is needed.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a Singleton pattern if only one instance of Good_CodeSmells is needed.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a Singleton pattern if only one instance of Good_CodeSmells is needed.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using the Template Method pattern if the greeting process is likely to have more steps in the future.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider using the Template Method pattern if the greeting process is likely to have more steps in the future.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using the Template Method pattern if the greeting process is likely to have more steps in the future.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using Dependency Injection for better testability and flexibility.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider using Dependency Injection for better testability and flexibility.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using Dependency Injection for better testability and flexibility.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is generally secure with no obvious security vulnerabilities such as injection flaws or insecure data handling. However, it does not sanitize or validate the input, which could potentially lead to issues if the input is not controlled.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider validating and sanitizing the input to the Good_CodeSmells constructor to ensure it is safe and as expected.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Consider validating and sanitizing the input to the Good_CodeSmells constructor to ensure it is safe and as expected.', this)" data-category="Security Analysis" data-recommendation="Consider validating and sanitizing the input to the Good_CodeSmells constructor to ensure it is safe and as expected.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.out.println for better control over output and potential security implications.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Consider using a logging framework instead of System.out.println for better control over output and potential security implications.', this)" data-category="Security Analysis" data-recommendation="Consider using a logging framework instead of System.out.println for better control over output and potential security implications.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the greet method private if it&#39;s not intended to be used outside of this class.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Consider making the greet method private if it&#39;s not intended to be used outside of this class.', this)" data-category="Security Analysis" data-recommendation="Consider making the greet method private if it&#39;s not intended to be used outside of this class.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling or exceptions to handle potential issues with the input or other parts of the code.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Consider adding error handling or exceptions to handle potential issues with the input or other parts of the code.', this)" data-category="Security Analysis" data-recommendation="Consider adding error handling or exceptions to handle potential issues with the input or other parts of the code.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding comments to the code to explain what each part does, which can help with maintainability and understanding the code.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider adding comments to the code to explain what each part does, which can help with maintainability and understanding the code.', this)" data-category="Security Analysis" data-recommendation="Consider adding comments to the code to explain what each part does, which can help with maintainability and understanding the code.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is mostly fine, but it doesn&#39;t handle the case where the input to the constructor is null, which would cause a NullPointerException when the greet method is called.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add null check in the constructor to prevent null name.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Add null check in the constructor to prevent null name.', this)" data-category="Bug Detection Analysis" data-recommendation="Add null check in the constructor to prevent null name.">Fix with AI</button></li>
+<li><span class="recommendation-text">Throw IllegalArgumentException in the constructor if the name is null.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Throw IllegalArgumentException in the constructor if the name is null.', this)" data-category="Bug Detection Analysis" data-recommendation="Throw IllegalArgumentException in the constructor if the name is null.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add Javadoc comments to methods to explain what they do.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Add Javadoc comments to methods to explain what they do.', this)" data-category="Bug Detection Analysis" data-recommendation="Add Javadoc comments to methods to explain what they do.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a default value for name in case null is passed.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider adding a default value for name in case null is passed.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider adding a default value for name in case null is passed.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider making the greet method return a String instead of printing directly to the console for better testability.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Consider making the greet method return a String instead of printing directly to the console for better testability.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider making the greet method return a String instead of printing directly to the console for better testability.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>6.25</td></tr>
+<tr><td>Lines of code</td><td>16</td></tr>
+<tr><td>Number of methods</td><td>3</td></tr>
+<tr><td>Number of classes</td><td>1</td></tr>
+<tr><td>Cyclomatic complexity</td><td>1</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:22:32 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

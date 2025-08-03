@@ -15,8 +15,6 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +46,7 @@ public class ReportGenerationService {
             // Default to HTML
             if (reportType == ReportType.TECHNICAL || reportType == ReportType.BOTH) {
                 generateTechnicalHtmlReport(result, outputPath);
+                generateDetailedAnalysisFiles(result, outputPath); // Generate individual file analysis reports
             }
             
             if (reportType == ReportType.NON_TECHNICAL || reportType == ReportType.BOTH) {
@@ -218,9 +217,12 @@ public class ReportGenerationService {
                 case RED -> "quality-red";
             };
             
+            String sanitizedFileName = sanitizeFileName(file.getFilename());
+            String detailsLink = String.format("analysis/%s-analysis.html", sanitizedFileName);
+            
             html.append(String.format("""
                 <tr>
-                    <td>%s</td>
+                    <td><a href="%s" style="color: #007acc; text-decoration: none; font-weight: bold;">%s</a></td>
                     <td class="score tooltip">%.1f
                         <span class="tooltiptext">%s</span>
                     </td>
@@ -240,6 +242,7 @@ public class ReportGenerationService {
                     <td><span class="%s">%s</span></td>
                 </tr>
                 """,
+                detailsLink,
                 file.getFilename(),
                 file.getCodeQuality(),
                 escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available"),
@@ -259,119 +262,15 @@ public class ReportGenerationService {
 
         html.append("</tbody></table>");
 
-        // Detailed reasoning section
+        // Simple message pointing to detailed analysis
         html.append("""
             <div class="reasoning-section">
-                <h2>Detailed Analysis Reasoning & Recommendations</h2>
-                <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings and specific recommendations for each file:</p>
+                <h2>Detailed Analysis & Recommendations</h2>
+                <p>For detailed analysis, reasoning, and specific recommendations for each file, click on the file name in the table above. 
+                Each file has its own comprehensive analysis report with actionable insights.</p>
+                <p><strong>Note:</strong> Hover over the scores in the table above to see brief explanations.</p>
+            </div>
             """);
-
-        for (FileAnalysisResult file : result.getFileResults()) {
-            html.append(String.format("""
-                <div class="reasoning-item">
-                    <h3>%s</h3>
-                """, escapeHtml(file.getFilename())));
-            
-            // Code Quality section
-            html.append(String.format("""
-                    <div class="reasoning-title">Code Quality (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
-                """, 
-                file.getCodeQuality(),
-                escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available")
-            ));
-            
-            // Add code quality recommendations if available
-            if (file.getCodeQualityRecommendations() != null && !file.getCodeQualityRecommendations().isEmpty()) {
-                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
-                for (String rec : file.getCodeQualityRecommendations()) {
-                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
-                }
-                html.append("</ul></div>");
-            }
-            
-            html.append("<br>");
-            
-            // Single Responsibility Principle section
-            html.append(String.format("""
-                    <div class="reasoning-title">Single Responsibility Principle (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
-                """, 
-                file.getSolid(),
-                escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available")
-            ));
-            
-            // Add SOLID recommendations if available
-            if (file.getSolidRecommendations() != null && !file.getSolidRecommendations().isEmpty()) {
-                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
-                for (String rec : file.getSolidRecommendations()) {
-                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
-                }
-                html.append("</ul></div>");
-            }
-            
-            html.append("<br>");
-            
-            // Design Patterns section
-            html.append(String.format("""
-                    <div class="reasoning-title">Design Patterns (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
-                """, 
-                file.getDesignPatterns(),
-                escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available")
-            ));
-            
-            // Add design patterns recommendations if available
-            if (file.getDesignPatternsRecommendations() != null && !file.getDesignPatternsRecommendations().isEmpty()) {
-                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
-                for (String rec : file.getDesignPatternsRecommendations()) {
-                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
-                }
-                html.append("</ul></div>");
-            }
-            
-            html.append("<br>");
-            
-            // Security section
-            html.append(String.format("""
-                    <div class="reasoning-title">Security (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
-                """, 
-                file.getSecurity(),
-                escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available")
-            ));
-            
-            // Add security recommendations if available
-            if (file.getSecurityRecommendations() != null && !file.getSecurityRecommendations().isEmpty()) {
-                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
-                for (String rec : file.getSecurityRecommendations()) {
-                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
-                }
-                html.append("</ul></div>");
-            }
-            
-            html.append("<br>");
-            
-            // Bug Detection section
-            html.append(String.format("""
-                    <div class="reasoning-title">Bug Detection (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
-                """, 
-                file.getBugDetection(),
-                escapeHtml(file.getBugDetectionReason() != null ? file.getBugDetectionReason() : "No detailed reasoning available")
-            ));
-            
-            // Add bug detection recommendations if available
-            if (file.getBugDetectionRecommendations() != null && !file.getBugDetectionRecommendations().isEmpty()) {
-                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
-                for (String rec : file.getBugDetectionRecommendations()) {
-                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
-                }
-                html.append("</ul></div>");
-            }
-            
-            html.append("</div>");
-        }
 
         html.append("</div>");
 
@@ -754,5 +653,265 @@ public class ReportGenerationService {
                    .replace(">", "&gt;")
                    .replace("\"", "&quot;")
                    .replace("'", "&#39;");
+    }
+
+    /**
+     * Generates detailed analysis files for each code file
+     */
+    private void generateDetailedAnalysisFiles(AnalysisResult result, Path outputPath) throws IOException {
+        // Create a subdirectory for detailed analysis files
+        Path analysisDir = outputPath.resolve("analysis");
+        Files.createDirectories(analysisDir);
+        
+        for (FileAnalysisResult file : result.getFileResults()) {
+            String fileName = sanitizeFileName(file.getFilename()) + "-analysis.html";
+            Path analysisFile = analysisDir.resolve(fileName);
+            String htmlContent = buildDetailedFileAnalysisHtml(file);
+            Files.writeString(analysisFile, htmlContent);
+        }
+        
+        logger.info("Generated {} detailed analysis files in: {}", result.getFileResults().size(), analysisDir);
+    }
+
+    /**
+     * Sanitizes filename for use in HTML file names
+     */
+    private String sanitizeFileName(String filename) {
+        return filename.replaceAll("[^a-zA-Z0-9.-]", "_").replaceAll("\\.(java|js|py|ts|cpp|c|h)$", "");
+    }
+
+    /**
+     * Builds detailed analysis HTML for a single file
+     */
+    private String buildDetailedFileAnalysisHtml(FileAnalysisResult file) {
+        StringBuilder html = new StringBuilder();
+        
+        // HTML Header
+        html.append("<!DOCTYPE html>\n");
+        html.append("<html lang=\"en\">\n");
+        html.append("<head>\n");
+        html.append("<meta charset=\"UTF-8\">\n");
+        html.append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
+        html.append("<title>").append(escapeHtml(file.getFilename())).append(" - Detailed Analysis</title>\n");
+        html.append("<style>\n");
+        html.append("body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }\n");
+        html.append(".container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n");
+        html.append(".header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }\n");
+        html.append(".header h1 { color: #007acc; margin: 0; font-size: 2.2em; }\n");
+        html.append(".back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }\n");
+        html.append(".back-link:hover { text-decoration: underline; }\n");
+        html.append(".summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }\n");
+        html.append(".score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }\n");
+        html.append(".score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }\n");
+        html.append(".score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }\n");
+        html.append(".score-label { color: #666; margin-top: 5px; font-size: 0.9em; }\n");
+        html.append(".analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }\n");
+        html.append(".analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }\n");
+        html.append(".reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }\n");
+        html.append(".recommendations { margin-top: 20px; }\n");
+        html.append(".recommendations h3 { color: #007acc; margin-bottom: 10px; }\n");
+        html.append(".recommendations ul { margin: 0; padding-left: 25px; }\n");
+        html.append(".recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }\n");
+        html.append(".recommendation-text { flex: 1; margin-right: 10px; }\n");
+        html.append(".fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }\n");
+        html.append(".fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }\n");
+        html.append(".fix-button:active { transform: translateY(0); }\n");
+        html.append(".fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }\n");
+        html.append(".fix-status { margin-left: 5px; font-size: 0.8em; }\n");
+        html.append(".fix-success { color: #28a745; }\n");
+        html.append(".fix-error { color: #dc3545; }\n");
+        html.append(".fix-loading { color: #ffc107; }\n");
+        html.append(".metrics-section { margin: 30px 0; }\n");
+        html.append(".metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }\n");
+        html.append(".metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }\n");
+        html.append(".metrics-table th { background-color: #007acc; color: white; }\n");
+        html.append(".quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }\n");
+        html.append(".quality-green { background-color: #28a745; }\n");
+        html.append(".quality-yellow { background-color: #ffc107; color: black; }\n");
+        html.append(".quality-red { background-color: #dc3545; }\n");
+        html.append(".final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }\n");
+        html.append("</style>\n");
+        html.append("<script>\n");
+        html.append("function fixWithAI(category, recommendation, button) {\n");
+        html.append("    const originalText = button.textContent;\n");
+        html.append("    button.disabled = true;\n");
+        html.append("    button.textContent = 'Fixing...';\n");
+        html.append("    button.style.background = '#ffc107';\n");
+        html.append("    \n");
+        html.append("    // Create status indicator\n");
+        html.append("    const statusSpan = document.createElement('span');\n");
+        html.append("    statusSpan.className = 'fix-status fix-loading';\n");
+        html.append("    statusSpan.textContent = ' ⏳';\n");
+        html.append("    button.parentNode.appendChild(statusSpan);\n");
+        html.append("    \n");
+        html.append("    // Simulate AI processing (replace with actual API call)\n");
+        html.append("    setTimeout(() => {\n");
+        html.append("        // For demo purposes, randomly succeed or fail\n");
+        html.append("        const success = Math.random() > 0.3;\n");
+        html.append("        \n");
+        html.append("        if (success) {\n");
+        html.append("            button.textContent = 'Fixed ✓';\n");
+        html.append("            button.style.background = '#28a745';\n");
+        html.append("            statusSpan.className = 'fix-status fix-success';\n");
+        html.append("            statusSpan.textContent = ' Applied';\n");
+        html.append("            \n");
+        html.append("            // Show success message\n");
+        html.append("            showNotification('Fix applied successfully for: ' + category, 'success');\n");
+        html.append("        } else {\n");
+        html.append("            button.textContent = 'Retry';\n");
+        html.append("            button.style.background = '#dc3545';\n");
+        html.append("            button.disabled = false;\n");
+        html.append("            statusSpan.className = 'fix-status fix-error';\n");
+        html.append("            statusSpan.textContent = ' Failed';\n");
+        html.append("            \n");
+        html.append("            // Show error message\n");
+        html.append("            showNotification('Failed to apply fix. Please try again.', 'error');\n");
+        html.append("        }\n");
+        html.append("    }, 2000 + Math.random() * 3000); // 2-5 second delay\n");
+        html.append("}\n");
+        html.append("\n");
+        html.append("function showNotification(message, type) {\n");
+        html.append("    const notification = document.createElement('div');\n");
+        html.append("    notification.style.cssText = `\n");
+        html.append("        position: fixed; top: 20px; right: 20px; z-index: 1000;\n");
+        html.append("        padding: 12px 20px; border-radius: 6px; color: white;\n");
+        html.append("        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);\n");
+        html.append("        transform: translateX(100%); transition: transform 0.3s ease;\n");
+        html.append("        background: ${type === 'success' ? '#28a745' : '#dc3545'};\n");
+        html.append("    `;\n");
+        html.append("    notification.textContent = message;\n");
+        html.append("    document.body.appendChild(notification);\n");
+        html.append("    \n");
+        html.append("    // Slide in\n");
+        html.append("    setTimeout(() => notification.style.transform = 'translateX(0)', 100);\n");
+        html.append("    \n");
+        html.append("    // Slide out and remove\n");
+        html.append("    setTimeout(() => {\n");
+        html.append("        notification.style.transform = 'translateX(100%)';\n");
+        html.append("        setTimeout(() => document.body.removeChild(notification), 300);\n");
+        html.append("    }, 4000);\n");
+        html.append("}\n");
+        html.append("</script>\n");
+        html.append("</head>\n");
+        html.append("<body>\n");
+        html.append("<div class=\"container\">\n");
+        html.append("<a href=\"../technical-report.html\" class=\"back-link\">← Back to Technical Report</a>\n");
+        
+        // Header
+        html.append("<div class=\"header\">\n");
+        html.append("<h1>").append(escapeHtml(file.getFilename())).append("</h1>\n");
+        html.append("<p>Detailed Code Analysis Results</p>\n");
+        html.append("</div>\n");
+
+        // Summary card with overall score
+        html.append("<div class=\"summary-card\">\n");
+        html.append("<div class=\"final-score\">").append(String.format("%.1f", file.getFinalScore())).append("</div>\n");
+        html.append("<div style=\"text-align: center;\">\n");
+        
+        String qualityClass = switch (file.getQualityIndicator()) {
+            case GREEN -> "quality-green";
+            case YELLOW -> "quality-yellow";  
+            case RED -> "quality-red";
+        };
+        
+        html.append("<span class=\"quality-indicator ").append(qualityClass).append("\">");
+        html.append(file.getQualityIndicator().getLabel());
+        html.append("</span></div></div>\n");
+
+        // Score breakdown
+        html.append("<div class=\"score-grid\">\n");
+        html.append("<div class=\"score-item\">\n");
+        html.append("<div class=\"score-value\">").append(String.format("%.1f", file.getCodeQuality())).append("</div>\n");
+        html.append("<div class=\"score-label\">Code Quality</div>\n");
+        html.append("</div>\n");
+        html.append("<div class=\"score-item\">\n");
+        html.append("<div class=\"score-value\">").append(String.format("%.1f", file.getSolid())).append("</div>\n");
+        html.append("<div class=\"score-label\">SOLID Principles</div>\n");
+        html.append("</div>\n");
+        html.append("<div class=\"score-item\">\n");
+        html.append("<div class=\"score-value\">").append(String.format("%.1f", file.getDesignPatterns())).append("</div>\n");
+        html.append("<div class=\"score-label\">Design Patterns</div>\n");
+        html.append("</div>\n");
+        html.append("<div class=\"score-item\">\n");
+        html.append("<div class=\"score-value\">").append(String.format("%.1f", file.getSecurity())).append("</div>\n");
+        html.append("<div class=\"score-label\">Security</div>\n");
+        html.append("</div>\n");
+        html.append("<div class=\"score-item\">\n");
+        html.append("<div class=\"score-value\">").append(String.format("%.1f", file.getBugDetection())).append("</div>\n");
+        html.append("<div class=\"score-label\">Bug Detection</div>\n");
+        html.append("</div>\n");
+        html.append("</div>\n");
+
+        // Detailed analysis sections
+        addAnalysisSection(html, "Code Quality Analysis", file.getCodeQuality(), file.getCodeQualityReason(), file.getCodeQualityRecommendations());
+        addAnalysisSection(html, "SOLID Principles Analysis", file.getSolid(), file.getSolidReason(), file.getSolidRecommendations());
+        addAnalysisSection(html, "Design Patterns Analysis", file.getDesignPatterns(), file.getDesignPatternsReason(), file.getDesignPatternsRecommendations());
+        addAnalysisSection(html, "Security Analysis", file.getSecurity(), file.getSecurityReason(), file.getSecurityRecommendations());
+        addAnalysisSection(html, "Bug Detection Analysis", file.getBugDetection(), file.getBugDetectionReason(), file.getBugDetectionRecommendations());
+
+        // File metrics
+        if (file.getMetrics() != null && !file.getMetrics().isEmpty()) {
+            html.append("<div class=\"metrics-section\">\n");
+            html.append("<h2>File Metrics</h2>\n");
+            html.append("<table class=\"metrics-table\">\n");
+            html.append("<tr><th>Metric</th><th>Value</th></tr>\n");
+            
+            file.getMetrics().forEach((key, value) -> {
+                String displayKey = key.replaceAll("([A-Z])", " $1").toLowerCase();
+                displayKey = displayKey.substring(0, 1).toUpperCase() + displayKey.substring(1);
+                html.append("<tr><td>").append(displayKey).append("</td><td>").append(value).append("</td></tr>\n");
+            });
+            
+            html.append("</table></div>\n");
+        }
+
+        // Footer
+        html.append("<div style=\"text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;\">\n");
+        html.append("<p>Analysis generated on ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append(" by Code Guard</p>\n");
+        html.append("<a href=\"../technical-report.html\" class=\"back-link\">← Back to Technical Report</a>\n");
+        html.append("</div>\n");
+        html.append("</div>\n");
+        html.append("</body>\n");
+        html.append("</html>\n");
+
+        return html.toString();
+    }
+
+    /**
+     * Helper method to add an analysis section to the detailed HTML
+     */
+    private void addAnalysisSection(StringBuilder html, String title, double score, String reason, List<String> recommendations) {
+        html.append("<div class=\"analysis-section\">\n");
+        html.append("<h2>").append(title).append(" (").append(String.format("%.1f", score)).append("/100)</h2>\n");
+        html.append("<div class=\"reasoning-text\">").append(escapeHtml(reason != null ? reason : "No detailed reasoning available")).append("</div>\n");
+        
+        if (recommendations != null && !recommendations.isEmpty()) {
+            html.append("<div class=\"recommendations\">\n");
+            html.append("<h3>Recommendations</h3>\n");
+            html.append("<ul>\n");
+            for (int i = 0; i < recommendations.size(); i++) {
+                String rec = recommendations.get(i);
+                String buttonId = String.format("fix-%s-%d", 
+                    title.toLowerCase().replaceAll("[^a-z0-9]", "-"), i);
+                
+                html.append("<li>");
+                html.append("<span class=\"recommendation-text\">").append(escapeHtml(rec)).append("</span>");
+                html.append(String.format(
+                    "<button class=\"fix-button\" id=\"%s\" " +
+                    "onclick=\"fixWithAI('%s', '%s', this)\" " +
+                    "data-category=\"%s\" data-recommendation=\"%s\">" +
+                    "Fix with AI</button>",
+                    buttonId,
+                    title.replace("'", "\\'"),
+                    escapeHtml(rec).replace("'", "\\'"),
+                    title,
+                    escapeHtml(rec)
+                ));
+                html.append("</li>\n");
+            }
+            html.append("</ul></div>\n");
+        }
+        
+        html.append("</div>\n");
     }
 }

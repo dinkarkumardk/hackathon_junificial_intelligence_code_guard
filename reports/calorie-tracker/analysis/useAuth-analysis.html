@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>useAuth.ts - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>useAuth.ts</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">90.8</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">85.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (85.0/100)</h2>
+<div class="reasoning-text">The code is concise, uses clear naming conventions, and leverages the useContext hook from React for context management, which is a good practice. However, it lacks comments and documentation, which could make it harder for other developers to understand.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add comments to the code to explain what it does, especially for the exported function.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add comments to the code to explain what it does, especially for the exported function.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to the code to explain what it does, especially for the exported function.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a docstring to the &#39;useAuth&#39; function to explain its purpose and usage.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Consider adding a docstring to the &#39;useAuth&#39; function to explain its purpose and usage.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding a docstring to the &#39;useAuth&#39; function to explain its purpose and usage.">Fix with AI</button></li>
+<li><span class="recommendation-text">Include type annotations for better type safety and readability.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Include type annotations for better type safety and readability.', this)" data-category="Code Quality Analysis" data-recommendation="Include type annotations for better type safety and readability.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider handling the case where the context might be undefined.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider handling the case where the context might be undefined.', this)" data-category="Code Quality Analysis" data-recommendation="Consider handling the case where the context might be undefined.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add tests to ensure the code works as expected.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Add tests to ensure the code works as expected.', this)" data-category="Code Quality Analysis" data-recommendation="Add tests to ensure the code works as expected.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (100.0/100)</h2>
+<div class="reasoning-text">The provided TypeScript code adheres excellently to the Single Responsibility Principle. Each function and import is focused on a single task.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">No changes are necessary as the code is already following the Single Responsibility Principle very well.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'No changes are necessary as the code is already following the Single Responsibility Principle very well.', this)" data-category="SOLID Principles Analysis" data-recommendation="No changes are necessary as the code is already following the Single Responsibility Principle very well.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that the &#39;useAuth&#39; function is only used for getting the authentication context.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Ensure that the &#39;useAuth&#39; function is only used for getting the authentication context.', this)" data-category="SOLID Principles Analysis" data-recommendation="Ensure that the &#39;useAuth&#39; function is only used for getting the authentication context.">Fix with AI</button></li>
+<li><span class="recommendation-text">Keep the &#39;AuthContext&#39; focused on authentication-related data and methods.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'Keep the &#39;AuthContext&#39; focused on authentication-related data and methods.', this)" data-category="SOLID Principles Analysis" data-recommendation="Keep the &#39;AuthContext&#39; focused on authentication-related data and methods.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid adding unrelated functionality to the &#39;useAuth&#39; function.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Avoid adding unrelated functionality to the &#39;useAuth&#39; function.', this)" data-category="SOLID Principles Analysis" data-recommendation="Avoid adding unrelated functionality to the &#39;useAuth&#39; function.">Fix with AI</button></li>
+<li><span class="recommendation-text">Continue to follow this pattern of single responsibility in other parts of the codebase.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'Continue to follow this pattern of single responsibility in other parts of the codebase.', this)" data-category="SOLID Principles Analysis" data-recommendation="Continue to follow this pattern of single responsibility in other parts of the codebase.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is simple and clean, using the Context API from React to provide a global state for authentication. However, it lacks error handling and type definition for the context value.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider adding error handling for cases where the AuthContext is not available.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding error handling for cases where the AuthContext is not available.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding error handling for cases where the AuthContext is not available.">Fix with AI</button></li>
+<li><span class="recommendation-text">Define a type for the context value to ensure type safety and better developer experience.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Define a type for the context value to ensure type safety and better developer experience.', this)" data-category="Design Patterns Analysis" data-recommendation="Define a type for the context value to ensure type safety and better developer experience.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding comments to your code to improve readability and maintainability.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding comments to your code to improve readability and maintainability.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding comments to your code to improve readability and maintainability.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a more robust state management solution like Redux if your application grows in complexity.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a more robust state management solution like Redux if your application grows in complexity.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a more robust state management solution like Redux if your application grows in complexity.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding unit tests to ensure the functionality of your custom hook.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding unit tests to ensure the functionality of your custom hook.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding unit tests to ensure the functionality of your custom hook.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is generally secure as it does not handle sensitive data directly, but it relies on the security of the AuthContext. It&#39;s important to ensure that the AuthContext is secure and handles data properly.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Ensure that the AuthContext is secure and handles data properly.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Ensure that the AuthContext is secure and handles data properly.', this)" data-category="Security Analysis" data-recommendation="Ensure that the AuthContext is secure and handles data properly.">Fix with AI</button></li>
+<li><span class="recommendation-text">Avoid storing sensitive data in the context if possible.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Avoid storing sensitive data in the context if possible.', this)" data-category="Security Analysis" data-recommendation="Avoid storing sensitive data in the context if possible.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that the useContext hook is used correctly and securely.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Ensure that the useContext hook is used correctly and securely.', this)" data-category="Security Analysis" data-recommendation="Ensure that the useContext hook is used correctly and securely.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling for cases where the context might not be available.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Consider adding error handling for cases where the context might not be available.', this)" data-category="Security Analysis" data-recommendation="Consider adding error handling for cases where the context might not be available.">Fix with AI</button></li>
+<li><span class="recommendation-text">Regularly update your dependencies to get the latest security updates.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Regularly update your dependencies to get the latest security updates.', this)" data-category="Security Analysis" data-recommendation="Regularly update your dependencies to get the latest security updates.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is mostly correct, but it assumes that the AuthContext is always available, which might not be the case.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Ensure that AuthContext is always available before using it.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Ensure that AuthContext is always available before using it.', this)" data-category="Bug Detection Analysis" data-recommendation="Ensure that AuthContext is always available before using it.">Fix with AI</button></li>
+<li><span class="recommendation-text">Handle the case where AuthContext is null or undefined.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Handle the case where AuthContext is null or undefined.', this)" data-category="Bug Detection Analysis" data-recommendation="Handle the case where AuthContext is null or undefined.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider providing a default value for AuthContext.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider providing a default value for AuthContext.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider providing a default value for AuthContext.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add error handling for potential exceptions.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Add error handling for potential exceptions.', this)" data-category="Bug Detection Analysis" data-recommendation="Add error handling for potential exceptions.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add types to the function to improve code readability and maintainability.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Add types to the function to improve code readability and maintainability.', this)" data-category="Bug Detection Analysis" data-recommendation="Add types to the function to improve code readability and maintainability.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>0.0</td></tr>
+<tr><td>Lines of code</td><td>4</td></tr>
+<tr><td>Number of methods</td><td>1</td></tr>
+<tr><td>Number of classes</td><td>0</td></tr>
+<tr><td>Cyclomatic complexity</td><td>1</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 12:58:17 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

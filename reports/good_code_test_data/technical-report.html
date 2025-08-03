@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Guard - Technical Analysis Report</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+        .header h1 { color: #007acc; margin: 0; font-size: 2.5em; }
+        .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .metric-card { background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #dee2e6; }
+        .metric-value { font-size: 2em; font-weight: bold; color: #007acc; }
+        .metric-label { color: #666; margin-top: 5px; }
+        .files-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .files-table th, .files-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .files-table th { background-color: #007acc; color: white; font-weight: bold; }
+        .files-table tr:hover { background-color: #f5f5f5; }
+        .quality-green { background-color: #28a745; color: white; padding: 4px 8px; border-radius: 4px; }
+        .quality-yellow { background-color: #ffc107; color: black; padding: 4px 8px; border-radius: 4px; }
+        .quality-red { background-color: #dc3545; color: white; padding: 4px 8px; border-radius: 4px; }
+        .score { font-weight: bold; }
+        .timestamp { text-align: center; color: #666; margin-top: 20px; font-size: 0.9em; }
+        .issues-section { margin-top: 30px; }
+        .issue-item { background: #fff3cd; border-left: 4px solid #ffc107; padding: 10px; margin: 10px 0; }
+        .issue-critical { border-left-color: #dc3545; background: #f8d7da; }
+        .issue-high { border-left-color: #fd7e14; background: #ffeeba; }
+        .tooltip { position: relative; cursor: help; }
+        .tooltip .tooltiptext { visibility: hidden; width: 300px; background-color: #555; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -150px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; line-height: 1.4; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .reasoning-section { margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
+        .reasoning-section h2 { color: #495057; margin-bottom: 15px; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+        .recommendations-section { margin: 30px 0; padding: 20px; background-color: #e8f5e8; border-radius: 8px; border: 1px solid #c3e6c3; }
+        .recommendations-section h2 { color: #2d5016; margin-bottom: 15px; border-bottom: 2px solid #c3e6c3; padding-bottom: 10px; }
+        .metric-recommendations { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .metric-recommendations h3 { color: #333; margin-bottom: 10px; font-size: 1.1em; }
+        .metric-recommendations ul { margin: 10px 0; padding-left: 20px; }
+        .metric-recommendations li { margin: 5px 0; color: #555; line-height: 1.4; }
+        .reasoning-item { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .reasoning-item h3 { color: #212529; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
+        .reasoning-title { font-weight: bold; color: #495057; margin: 10px 0 5px 0; }
+        .reasoning-text { color: #6c757d; line-height: 1.5; padding: 8px 0; border-left: 3px solid #007bff; padding-left: 15px; background-color: #f8f9fa; border-radius: 3px; }
+        .metrics-section { margin: 30px 0; }
+        .metrics-section h2 { color: #495057; margin-bottom: 20px; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Code Guard Technical Report</h1>
+            <p>Comprehensive code analysis and quality metrics</p>
+        </div>
+<div class="summary"><div class="metric-card">
+    <div class="metric-value">91.1</div>
+    <div class="metric-label">Overall Score</div>
+</div>
+<div class="metric-card">
+    <div class="metric-value">30</div>
+    <div class="metric-label">Total Files</div>
+</div>
+<div class="metric-card">
+    <div class="metric-value">604</div>
+    <div class="metric-label">Total Lines</div>
+</div>
+<div class="metric-card">
+    <div class="metric-value">89</div>
+    <div class="metric-label">Total Functions</div>
+</div>
+<div class="metric-card">
+    <div class="metric-value">1.9</div>
+    <div class="metric-label">Avg Complexity</div>
+</div>
+<div class="metric-card">
+    <div class="metric-value">29</div>
+    <div class="metric-label">High Quality</div>
+</div>
+<div class="metric-card">
+    <div class="metric-value">1</div>
+    <div class="metric-label">Critical Issues</div>
+</div>
+</div><h2>File Analysis Results</h2>
+<table class="files-table">
+    <thead>
+        <tr>
+            <th>Filename</th>
+            <th>Code Quality</th>
+            <th>Single Responsibility</th>
+            <th>Design Patterns</th>
+            <th>Security</th>
+            <th>Bug Detection</th>
+            <th>Final Score</th>
+            <th>Quality</th>
+        </tr>
+    </thead>
+    <tbody>
+<tr>
+    <td><a href="analysis/Good_Reusability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Reusability.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and demonstrates good reusability with the generic printArray method. However, it lacks comments explaining what the code does and the class and method names could be more descriptive.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Reusability adheres to the Single Responsibility Principle quite well, as it only has one responsibility, which is to print an array. However, the main method is also included in this class, which slightly deviates from the SRP.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good use of generics for reusability, but it lacks design patterns. It&#39;s a simple, straightforward code with no clear architectural decisions.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code does not have any apparent security vulnerabilities. It is a simple program that prints out the elements of an array, and does not involve any user input, file I/O, network communication, or other common sources of security issues.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is mostly correct, but it does not handle the case where the input array is null, which would result in a NullPointerException.</span>
+    </td>
+    <td class="score">90.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Modularity-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Modularity.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, demonstrating good modularity. However, it lacks comments explaining what the methods do.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code follows the Single Responsibility Principle well, with each class and method having a clear, single responsibility. However, the CalculatorModule class could be further broken down into separate classes for each operation for better adherence to SRP.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code demonstrates good modularity and encapsulation, but it does not use any specific design patterns. The CalculatorModule class could be made more flexible and extensible by using the Strategy pattern.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code is secure as it does not have any security vulnerabilities such as injection flaws, insecure data handling, etc. It follows good modularity practices.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It is a simple program that creates an instance of the CalculatorModule class and uses its methods to perform addition and subtraction.</span>
+    </td>
+    <td class="score">93.3</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_CodeSmells-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_CodeSmells.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand. However, it lacks comments explaining the purpose of the class and its methods, which could make it harder for other developers to understand.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_CodeSmells has a single responsibility of greeting a given name, but the main method is also included in the class which is not its responsibility.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple and clean, following good practices such as encapsulation and immutability. However, it lacks flexibility and extensibility, as it does not use any design patterns.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure with no obvious security vulnerabilities such as injection flaws or insecure data handling. However, it does not sanitize or validate the input, which could potentially lead to issues if the input is not controlled.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is mostly fine, but it doesn&#39;t handle the case where the input to the constructor is null, which would cause a NullPointerException when the greet method is called.</span>
+    </td>
+    <td class="score">90.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Maintainability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Maintainability.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, which makes it highly readable and maintainable. However, it lacks comments to explain the purpose of the class and its methods, which could make it harder for other developers to understand the code.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Maintainability adheres to the Single Responsibility Principle quite well, as it is primarily responsible for managing the counter. However, it also contains the main method which is responsible for testing the class.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple and well-structured, but it does not demonstrate the use of any design patterns. It is a simple class with a counter, increment, reset, and getter methods.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code does not have any security vulnerabilities. It is a simple class with a counter that can be incremented and reset, and does not involve any user input, file operations, or network operations that could potentially be exploited.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It correctly increments, resets, and retrieves the value of the counter.</span>
+    </td>
+    <td class="score">93.3</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Consistency-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Consistency.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured, consistent, and easy to read. However, it lacks comments that explain the purpose of the class and its methods.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Consistency adheres to the Single Responsibility Principle quite well, as it is primarily responsible for maintaining and displaying user information. However, it could be improved by separating the display logic into a separate class.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured and follows the encapsulation principle of Object-Oriented Programming. However, it does not implement any specific design pattern.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure as it does not expose any sensitive data or allow for any form of injection. However, it does not sanitize or validate the input data.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free, well-structured, and follows good programming practices.</span>
+    </td>
+    <td class="score">92.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Security-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Security.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, readable, and well-documented, but it lacks flexibility and robustness. The authentication method is hard-coded with a single username and password, which is not a good practice.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Security is mostly adhering to the Single Responsibility Principle as it is primarily focused on authentication. However, it also includes a main method for testing which could be separated.</span>
+    </td>
+    <td class="score tooltip">60.0
+        <span class="tooltiptext">The code does not use any design patterns and has hard-coded values for username and password, which is not a good practice. The code also lacks error handling and logging mechanisms.</span>
+    </td>
+    <td class="score tooltip">70.0
+        <span class="tooltiptext">The code does not have any obvious security vulnerabilities like injection flaws, but it uses hard-coded credentials which is not a good practice. Also, it lacks encryption for password which is a major security concern.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is mostly correct, but it uses a hardcoded username and password for authentication, which is not a good security practice. Also, the password check is case-sensitive, which might not be the intended behavior.</span>
+    </td>
+    <td class="score">80.3</td>
+    <td><span class="quality-yellow">Medium Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_LintingErrors-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_LintingErrors.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and follows standard Java conventions. However, it lacks comments and documentation which would explain the purpose of the class and its methods.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_LintingErrors adheres to the Single Responsibility Principle quite well, but the main method is doing more than one job.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple and follows the encapsulation principle of Object-Oriented Programming, but it does not demonstrate the use of any design patterns. Also, the class name does not follow Java naming conventions.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is generally secure as it does not have any obvious security vulnerabilities such as injection flaws, insecure data handling, etc. However, it lacks input validation which could potentially lead to issues.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free, with no null pointer exceptions, array bounds errors, infinite loops, incorrect logic conditions, resource leaks, or race conditions.</span>
+    </td>
+    <td class="score">92.3</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Encapsulation-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Encapsulation.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured, readable, and follows good encapsulation practices. However, it lacks comments and documentation which are essential for understanding the purpose of the code and its functions.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Encapsulation adheres to the Single Responsibility Principle quite well, as it is primarily responsible for managing and validating the &#39;name&#39; and &#39;age&#39; properties of an object. However, it also includes a main method for testing, which could be separated.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good encapsulation practices, but it lacks comments and does not follow the Java naming conventions. The class name should not contain underscores.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure with good encapsulation practices and input validation, but it lacks encryption for sensitive data like name and age.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It follows good encapsulation practices, has proper error handling, and doesn&#39;t have any null pointer exceptions, array bounds errors, infinite loops, incorrect logic conditions, resource leaks, or race conditions.</span>
+    </td>
+    <td class="score">92.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Extensibility-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Extensibility.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured, easy to read, and follows good object-oriented principles such as encapsulation and polymorphism. However, it lacks comments and documentation which are important for maintainability.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres to the Single Responsibility Principle excellently. Each class has a single responsibility and there is no reason for them to change except for their own functionality.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code uses the Strategy design pattern correctly, allowing for easy addition of new shapes in the future. However, it lacks comments which would make it easier for other developers to understand.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code does not have any apparent security vulnerabilities. It follows good object-oriented programming practices by using interfaces and encapsulation.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free, well-structured, and follows good object-oriented programming principles.</span>
+    </td>
+    <td class="score">96.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_LawOfDemeter-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_LawOfDemeter.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and follows the Law of Demeter, which is a good practice for reducing dependencies between classes. However, it lacks comments explaining what each class and method does.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres excellently to the Single Responsibility Principle. Each class and method has a single responsibility and does not perform any unnecessary tasks.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code correctly implements the Law of Demeter, which is a specific case of loose coupling. However, it lacks flexibility and extensibility, as the Car class is tightly coupled with the Engine class.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is generally secure and follows good practices, but it lacks input validation and error handling.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It follows the Law of Demeter, which is a specific case of loose coupling.</span>
+    </td>
+    <td class="score">95.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_SeparationOfConcerns-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_SeparationOfConcerns.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is well-structured and demonstrates good separation of concerns, but lacks comments and documentation. The methods and classes are named appropriately, which enhances readability.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres excellently to the Single Responsibility Principle. Each class has a single responsibility: DataFetcher is responsible for fetching data, DataProcessor is responsible for processing data, and Good_SeparationOfConcerns is responsible for coordinating the fetching and processing.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code demonstrates good separation of concerns, but it lacks flexibility and extensibility. It does not use any specific design pattern.</span>
+    </td>
+    <td class="score tooltip">80.0
+        <span class="tooltiptext">The code is generally secure as it does not have any obvious security vulnerabilities like injection flaws or insecure data handling. However, it lacks input validation and error handling which could potentially lead to issues.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It is a simple example of separation of concerns where one class is responsible for fetching data and another class is responsible for processing that data.</span>
+    </td>
+    <td class="score">90.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Duplication-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Duplication.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, but lacks comments and documentation to explain its purpose and functionality. The method and class names are descriptive, but could be more specific.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Duplication adheres to the Single Responsibility Principle quite well, but the main method could be considered a second responsibility.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple and straightforward, avoiding duplication by using a method to print greetings. However, it does not demonstrate the use of any specific design patterns.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure but it does not validate or sanitize the input, which could potentially lead to issues if the input is not controlled. However, in this specific context, the risk is minimal.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It is simple and straightforward, with no null pointer exceptions, array bounds errors, infinite loops, incorrect logic conditions, resource leaks, or race conditions.</span>
+    </td>
+    <td class="score">90.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Documentation-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Documentation.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-documented, easy to read, and maintainable. However, the class name does not follow the standard Java naming conventions.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class adheres to the Single Responsibility Principle quite well, but it could be improved by separating the main method into a different class.</span>
+    </td>
+    <td class="score tooltip">70.0
+        <span class="tooltiptext">The code is simple and well-documented, but it doesn&#39;t demonstrate the use of any design patterns. It could be improved by implementing some basic design patterns, such as Factory or Singleton, to make it more robust and scalable.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code is secure as it does not have any security vulnerabilities such as injection flaws, insecure data handling, etc. It is a simple calculator program that adds two integers.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free, well-documented, and follows good programming practices.</span>
+    </td>
+    <td class="score">91.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_ResponsibilityAssignment-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_ResponsibilityAssignment.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and follows the Single Responsibility Principle, making it easy to read and maintain. However, it lacks comments and documentation which could make it more understandable.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres excellently to the Single Responsibility Principle. Each class has a single responsibility: the Order class is responsible for holding order data, and the OrderProcessor class is responsible for processing orders.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good use of the Single Responsibility Principle, with each class having a clear, distinct role. However, it lacks flexibility and extensibility, as the OrderProcessor class is tightly coupled with the Order class.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure with no obvious security vulnerabilities such as injection flaws or insecure data handling. However, it lacks input validation and error handling.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It correctly creates an Order object, an OrderProcessor object, and calls the process method on the OrderProcessor object with the Order object as an argument.</span>
+    </td>
+    <td class="score">92.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Robustness-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Robustness.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, readable, and handles the divide by zero error, but lacks proper documentation and could be improved in terms of error handling.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Robustness and its methods adhere to the Single Responsibility Principle quite well, but it does mix business logic with error handling and console output.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple and robust, handling the potential error of division by zero. However, it does not use any design patterns and could be improved by throwing an exception instead of returning zero when division by zero is attempted.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure and follows good practices, but it could be improved by throwing an exception instead of returning a value when division by zero is attempted.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It correctly handles the potential division by zero error.</span>
+    </td>
+    <td class="score">90.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Scalability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Scalability.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and uses efficient methods for processing large amounts of data. However, it lacks detailed comments and the method name could be more descriptive.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Scalability and its methods adhere to the Single Responsibility Principle quite well, with the class and its method each having a single responsibility. However, the main method is doing two things: creating an instance of Good_Scalability and printing the result.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and uses Java 8 streams for efficient parallel processing. However, it lacks flexibility and extensibility as it is tightly coupled to the specific task of summing a range of integers.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is generally secure as it does not have any obvious security vulnerabilities such as injection flaws, insecure data handling, etc. However, it lacks input validation which could lead to potential issues.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It uses Java 8 streams to efficiently calculate the sum of a large range of numbers.</span>
+    </td>
+    <td class="score">91.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Refactorability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Refactorability.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, but lacks proper documentation and comments to explain the purpose of the class and its methods. The method name &#39;multiply&#39; is self-explanatory, but it would be better to have a brief comment explaining its purpose.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Refactorability adheres to the Single Responsibility Principle well, as it only has one responsibility, which is to perform multiplication. However, the main method is also included in this class, which is not ideal.</span>
+    </td>
+    <td class="score tooltip">70.0
+        <span class="tooltiptext">The code is simple and straightforward, but it doesn&#39;t demonstrate the use of any design patterns. It&#39;s also not very flexible or extensible, as it&#39;s tightly coupled and doesn&#39;t separate concerns.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code does not have any security vulnerabilities. It is a simple program that multiplies two numbers, and does not involve any user input, file operations, or network operations that could potentially be exploited.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is simple and does not contain any bugs, logical errors, or runtime issues.</span>
+    </td>
+    <td class="score">89.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_HighCohesion-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_HighCohesion.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand. It follows the principle of high cohesion, where each class has a single, well-defined responsibility.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres excellently to the Single Responsibility Principle. Each class has a single responsibility: EmailSender is responsible for sending emails, and EmailValidator is responsible for validating email addresses.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good use of the High Cohesion principle, with each class having a single, well-defined responsibility. However, it lacks the use of design patterns.</span>
+    </td>
+    <td class="score tooltip">70.0
+        <span class="tooltiptext">The code is relatively secure as it does not have any obvious security vulnerabilities like SQL injection or insecure data handling. However, the email validation is very basic and could be improved.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is mostly bug-free, but the email validation is very basic and may not catch all invalid email formats.</span>
+    </td>
+    <td class="score">89.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_ResourceManagement-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_ResourceManagement.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is generally well-written and follows good resource management practices, but lacks sufficient comments and documentation. The variable and method names are clear and descriptive, which improves readability.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class adheres to the Single Responsibility Principle quite well, as it is primarily focused on reading a file. However, it also handles printing the file contents and error messages, which could be considered additional responsibilities.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good use of the try-with-resources statement for automatic resource management, which is a recommended practice in Java. However, it lacks flexibility and extensibility due to hard-coded values and lack of error handling beyond basic console output.</span>
+    </td>
+    <td class="score tooltip">80.0
+        <span class="tooltiptext">The code is generally secure and follows good resource management practices, but it does not validate or sanitize the input file name, which could lead to path traversal or injection attacks. Also, it directly prints out the exception message to the standard error, which could potentially leak sensitive information.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is mostly bug-free, but it does not handle the case where the file does not exist or cannot be read.</span>
+    </td>
+    <td class="score">87.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Performance-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Performance.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, but lacks comments explaining what the methods do and the class name does not follow Java naming conventions.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Performance adheres to the Single Responsibility Principle quite well, with its only responsibility being to find the maximum value in an array. However, it includes a main method which is used for testing, which could be separated out.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple and functional, but it does not demonstrate the use of any design patterns. It could be improved by using a strategy pattern for finding the maximum value, which would make the code more flexible and extensible.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is generally secure as it does not involve any user input, network communication, or file operations that could be exploited. However, it does not handle potential exceptions that could occur.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It correctly finds the maximum value in an array using Java 8 streams.</span>
+    </td>
+    <td class="score">91.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_CouplingAndCohesion-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_CouplingAndCohesion.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured, easy to read, and demonstrates good practices of coupling and cohesion. However, it lacks comments explaining the purpose of the classes and methods, which could make it harder for other developers to understand.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code adheres well to the Single Responsibility Principle, with each class having a clear, single responsibility. However, the UserService class could be improved to separate the logging and user creation responsibilities.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good use of dependency injection, which is a design pattern that reduces coupling. However, the Logger class could be improved by implementing a Singleton pattern, as usually only one instance of a logger is needed in an application.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure with good use of encapsulation and separation of concerns. However, it lacks input validation which could potentially lead to security vulnerabilities.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It follows good practices of coupling and cohesion, and there are no null pointer exceptions, array bounds errors, infinite loops, incorrect logic conditions, resource leaks, or race conditions.</span>
+    </td>
+    <td class="score">92.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_ErrorHandling-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_ErrorHandling.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is well-structured, readable, and has good error handling. However, it lacks comments explaining the purpose of the code and the functionality of the methods, which can make it harder for other developers to understand.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_ErrorHandling adheres to the Single Responsibility Principle quite well, as it is primarily responsible for processing a file and handling any errors that may occur during this process. However, it also prints the content of the file, which could be considered a separate responsibility.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code demonstrates good error handling practices, but it lacks the use of design patterns. The code could be improved by implementing a strategy pattern for handling different types of errors.</span>
+    </td>
+    <td class="score tooltip">80.0
+        <span class="tooltiptext">The code is generally secure with good error handling, but it lacks input validation and does not handle potential security risks associated with file paths. It also exposes sensitive information through error messages.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is mostly correct and handles errors well, but it does not check if the file &#39;data.txt&#39; exists before trying to open it, which could lead to a FileNotFoundException.</span>
+    </td>
+    <td class="score">86.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_CodeCoverage-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_CodeCoverage.java</a></td>
+    <td class="score tooltip">80.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, but lacks comprehensive documentation and does not follow Java naming conventions.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class adheres to the Single Responsibility Principle quite well, but the main method is doing two things: testing and reporting. It would be better to separate these responsibilities.</span>
+    </td>
+    <td class="score tooltip">70.0
+        <span class="tooltiptext">The code is simple and functional, but it does not demonstrate the use of any design patterns. The testing is rudimentary and does not cover edge cases or error handling.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is simple and does not have any obvious security vulnerabilities such as injection flaws or insecure data handling. However, it lacks error handling and input validation.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is simple and doesn&#39;t contain any bugs, logical errors, or runtime issues.</span>
+    </td>
+    <td class="score">87.5</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Readability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Readability.java</a></td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is very readable and maintainable with clear variable names, a well-documented method, and a simple structure. However, the main method could use some comments for better understanding.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Readability is mostly adhering to the Single Responsibility Principle, as it is primarily focused on calculating the area of a rectangle. However, it also includes a main method for testing which could be separated.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple, clean, and well-documented, but it does not demonstrate the use of any design patterns. It could be improved by incorporating some object-oriented principles or design patterns.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code is secure as it does not have any security vulnerabilities such as injection flaws, insecure data handling, etc. It is a simple program that calculates the area of a rectangle and does not interact with any external systems or handle sensitive data.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It is a simple program that calculates the area of a rectangle and prints it.</span>
+    </td>
+    <td class="score">95.3</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_LooseCoupling-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_LooseCoupling.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured, easy to read, and demonstrates good use of interfaces for loose coupling. However, it lacks comments explaining the purpose of classes and methods.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code adheres to the Single Responsibility Principle quite well, with each class having a clear, single responsibility. However, the &#39;Good_LooseCoupling&#39; class could be improved to better adhere to SRP.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates a good use of the Dependency Injection design pattern, which promotes loose coupling and high cohesion. However, it lacks flexibility as it only supports one type of notification service.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure and follows good practices, but it lacks input validation which could potentially lead to security issues such as injection attacks.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It follows the principle of loose coupling, which makes it easier to test and maintain.</span>
+    </td>
+    <td class="score">92.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Flexibility-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Flexibility.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-structured, easy to read, and follows good object-oriented principles. However, it lacks comments explaining what each class and method does.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres excellently to the Single Responsibility Principle. Each class and interface has a single responsibility and does not perform any other tasks.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates a good use of the Strategy design pattern, which allows the algorithm to be selected at runtime. However, it lacks the use of a context class to manage the strategy, which would improve encapsulation and make the code more robust.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is generally secure as it does not handle sensitive data or perform operations that could lead to common security vulnerabilities like injection attacks. However, it lacks input validation and error handling.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It correctly implements an interface and uses it to call the appropriate method based on the object type.</span>
+    </td>
+    <td class="score">94.0</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Immutability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Immutability.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-written, easy to read, and follows good practices for immutability in Java. However, it lacks comprehensive comments and documentation.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The class adheres to the Single Responsibility Principle excellently. It only has one responsibility, which is to hold and provide access to the &#39;name&#39; and &#39;age&#39; properties of an immutable object.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code demonstrates a good use of the immutability design pattern, but lacks comments explaining the purpose of the class and its methods. It also does not handle potential null values for the name parameter.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is generally secure and follows good immutability practices, but it does not sanitize or validate the input data.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It demonstrates good immutability practices in Java, where the object&#39;s state cannot be changed after it&#39;s created.</span>
+    </td>
+    <td class="score">95.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Complexity-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Complexity.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and easy to understand, but lacks comments explaining what the methods do and what the variables represent. The method and variable names are descriptive, which aids readability.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_Complexity adheres to the Single Responsibility Principle quite well, with its only responsibility being to calculate the sum of an array. However, it includes a main method for testing, which could be separated into a different class.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is simple and straightforward, but it does not demonstrate the use of any design patterns. It is a simple procedural code with a single class and does not utilize object-oriented principles or design patterns.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code is secure as it does not have any security vulnerabilities such as injection flaws, insecure data handling, etc. It is a simple program that sums the elements of an array.</span>
+    </td>
+    <td class="score tooltip">95.0
+        <span class="tooltiptext">The code is almost perfect, but it does not handle the case where the input array could be null, which would cause a NullPointerException.</span>
+    </td>
+    <td class="score">91.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_APIUsability-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_APIUsability.java</a></td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is well-documented, readable, and maintainable. However, it lacks error handling for the actual sending of the message.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The class Good_APIUsability mostly adheres to the Single Responsibility Principle as it is primarily concerned with sending messages. However, it also includes a main method for testing purposes, which could be considered a second responsibility.</span>
+    </td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is well-structured and follows good practices for API design, but it lacks a real implementation for sending messages and doesn&#39;t use any design patterns.</span>
+    </td>
+    <td class="score tooltip">70.0
+        <span class="tooltiptext">The code is generally safe from common security vulnerabilities like injection attacks, but it lacks proper logging and error handling mechanisms. Additionally, it does not sanitize or validate the input data, which could potentially lead to security issues.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code is mostly bug-free, but it does not handle the case where the &#39;message&#39; parameter in the &#39;sendMessage&#39; method with three parameters is null or empty.</span>
+    </td>
+    <td class="score">85.3</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+<tr>
+    <td><a href="analysis/Good_Abstraction-analysis.html" style="color: #007acc; text-decoration: none; font-weight: bold;">Good_Abstraction.java</a></td>
+    <td class="score tooltip">85.0
+        <span class="tooltiptext">The code is simple, clean, and demonstrates good use of abstraction and polymorphism. However, it lacks comments explaining the purpose of the classes and methods, which could make it harder for other developers to understand.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code adheres excellently to the Single Responsibility Principle. Each class has a single responsibility: the Animal class is responsible for declaring the makeSound method, and the Dog and Cat classes are responsible for implementing it.</span>
+    </td>
+    <td class="score tooltip">90.0
+        <span class="tooltiptext">The code demonstrates good use of the abstraction design principle and the template method pattern. However, it lacks flexibility and extensibility due to the absence of interfaces or strategy pattern.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The provided Java code does not have any security vulnerabilities. It is a simple example of abstraction and polymorphism in Java, and does not involve any user input, file I/O, network communication, or other areas where security issues typically arise.</span>
+    </td>
+    <td class="score tooltip">100.0
+        <span class="tooltiptext">The code is bug-free. It correctly demonstrates the use of abstraction in Java, with no null pointer exceptions, array bounds errors, infinite loops, incorrect logic conditions, resource leaks, or race conditions.</span>
+    </td>
+    <td class="score">94.8</td>
+    <td><span class="quality-green">High Quality</span></td>
+</tr>
+</tbody></table><div class="reasoning-section">
+    <h2>Detailed Analysis & Recommendations</h2>
+    <p>For detailed analysis, reasoning, and specific recommendations for each file, click on the file name in the table above.
+    Each file has its own comprehensive analysis report with actionable insights.</p>
+    <p><strong>Note:</strong> Hover over the scores in the table above to see brief explanations.</p>
+</div>
+</div><div class="metrics-section">
+    <h2>File Metrics Overview</h2>
+    <table class="files-table">
+        <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Lines of Code</th>
+                <th>Functions</th>
+                <th>Classes</th>
+                <th>Cyclomatic Complexity</th>
+                <th>Comment Ratio (%)</th>
+                <th>Complexity Level</th>
+            </tr>
+        </thead>
+        <tbody>
+<tr>
+    <td>Good_Reusability.java</td>
+    <td>19</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>5.3</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Modularity.java</td>
+    <td>16</td>
+    <td>3</td>
+    <td>2</td>
+    <td>2</td>
+    <td>6.3</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_CodeSmells.java</td>
+    <td>16</td>
+    <td>3</td>
+    <td>1</td>
+    <td>1</td>
+    <td>6.3</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Maintainability.java</td>
+    <td>23</td>
+    <td>4</td>
+    <td>1</td>
+    <td>1</td>
+    <td>4.4</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Consistency.java</td>
+    <td>22</td>
+    <td>4</td>
+    <td>1</td>
+    <td>1</td>
+    <td>4.6</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Security.java</td>
+    <td>16</td>
+    <td>2</td>
+    <td>1</td>
+    <td>3</td>
+    <td>12.5</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_LintingErrors.java</td>
+    <td>18</td>
+    <td>3</td>
+    <td>1</td>
+    <td>1</td>
+    <td>5.6</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Encapsulation.java</td>
+    <td>31</td>
+    <td>5</td>
+    <td>1</td>
+    <td>4</td>
+    <td>3.2</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Extensibility.java</td>
+    <td>22</td>
+    <td>5</td>
+    <td>3</td>
+    <td>1</td>
+    <td>4.6</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_LawOfDemeter.java</td>
+    <td>20</td>
+    <td>3</td>
+    <td>3</td>
+    <td>1</td>
+    <td>5.0</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_SeparationOfConcerns.java</td>
+    <td>20</td>
+    <td>3</td>
+    <td>3</td>
+    <td>1</td>
+    <td>5.0</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Duplication.java</td>
+    <td>13</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>7.7</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Documentation.java</td>
+    <td>21</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>28.6</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_ResponsibilityAssignment.java</td>
+    <td>18</td>
+    <td>4</td>
+    <td>3</td>
+    <td>1</td>
+    <td>5.6</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Robustness.java</td>
+    <td>17</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>11.8</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Scalability.java</td>
+    <td>12</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>16.7</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Refactorability.java</td>
+    <td>12</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>16.7</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_HighCohesion.java</td>
+    <td>20</td>
+    <td>3</td>
+    <td>3</td>
+    <td>2</td>
+    <td>5.0</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_ResourceManagement.java</td>
+    <td>22</td>
+    <td>2</td>
+    <td>1</td>
+    <td>3</td>
+    <td>9.1</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Performance.java</td>
+    <td>14</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>7.1</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_CouplingAndCohesion.java</td>
+    <td>26</td>
+    <td>4</td>
+    <td>3</td>
+    <td>1</td>
+    <td>7.7</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_ErrorHandling.java</td>
+    <td>26</td>
+    <td>2</td>
+    <td>1</td>
+    <td>5</td>
+    <td>7.7</td>
+    <td>MEDIUM</td>
+</tr>
+<tr>
+    <td>Good_CodeCoverage.java</td>
+    <td>14</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>14.3</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Readability.java</td>
+    <td>20</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>25.0</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_LooseCoupling.java</td>
+    <td>26</td>
+    <td>4</td>
+    <td>3</td>
+    <td>1</td>
+    <td>3.9</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Flexibility.java</td>
+    <td>23</td>
+    <td>3</td>
+    <td>3</td>
+    <td>1</td>
+    <td>4.4</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Immutability.java</td>
+    <td>20</td>
+    <td>4</td>
+    <td>1</td>
+    <td>1</td>
+    <td>10.0</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Complexity.java</td>
+    <td>16</td>
+    <td>2</td>
+    <td>1</td>
+    <td>2</td>
+    <td>6.3</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_APIUsability.java</td>
+    <td>37</td>
+    <td>3</td>
+    <td>1</td>
+    <td>5</td>
+    <td>27.0</td>
+    <td>LOW</td>
+</tr>
+<tr>
+    <td>Good_Abstraction.java</td>
+    <td>24</td>
+    <td>5</td>
+    <td>4</td>
+    <td>1</td>
+    <td>4.2</td>
+    <td>LOW</td>
+</tr>
+</tbody></table></div><h2>Recommendations</h2><ul><li>Review security practices and implement recommended improvements.</li><li>Consider implementing design patterns where appropriate.</li><li>Ensure all code follows SOLID principles.</li></ul><div class="timestamp">
+    Report generated on 2025-08-03 13:22:32 by Code Guard v1.0.0
+</div>
+</div>
+</body>
+</html>

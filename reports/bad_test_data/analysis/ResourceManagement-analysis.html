@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ResourceManagement.java - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>ResourceManagement.java</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">59.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-red">Low Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">60.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">70.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">40.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">60.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">60.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (60.0/100)</h2>
+<div class="reasoning-text">The code is fairly readable and simple, but it lacks proper resource management and error handling. There is also no documentation or comments explaining the purpose of the code or its methods.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Use try-with-resources to automatically close the FileInputStream.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Use try-with-resources to automatically close the FileInputStream.', this)" data-category="Code Quality Analysis" data-recommendation="Use try-with-resources to automatically close the FileInputStream.">Fix with AI</button></li>
+<li><span class="recommendation-text">Improve error handling by doing more than just printing the stack trace.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Improve error handling by doing more than just printing the stack trace.', this)" data-category="Code Quality Analysis" data-recommendation="Improve error handling by doing more than just printing the stack trace.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to explain the purpose of the code and its methods.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Add comments to explain the purpose of the code and its methods.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to explain the purpose of the code and its methods.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider throwing the IOException to be handled by the calling method.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider throwing the IOException to be handled by the calling method.', this)" data-category="Code Quality Analysis" data-recommendation="Consider throwing the IOException to be handled by the calling method.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add a finally block to ensure the FileInputStream is closed if an exception is thrown.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Add a finally block to ensure the FileInputStream is closed if an exception is thrown.', this)" data-category="Code Quality Analysis" data-recommendation="Add a finally block to ensure the FileInputStream is closed if an exception is thrown.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (70.0/100)</h2>
+<div class="reasoning-text">The class adheres to the Single Responsibility Principle to a good extent as it is primarily focused on reading a file, but it also handles printing the file content and error handling, which could be separated. The resource management is also poor, with no proper closing of resources.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Separate the concerns of reading a file and printing its content into different methods or classes.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'Separate the concerns of reading a file and printing its content into different methods or classes.', this)" data-category="SOLID Principles Analysis" data-recommendation="Separate the concerns of reading a file and printing its content into different methods or classes.">Fix with AI</button></li>
+<li><span class="recommendation-text">Improve error handling by not just printing the stack trace, but also taking appropriate action.</span><button class="fix-button" id="fix-solid-principles-analysis-1" onclick="fixWithAI('SOLID Principles Analysis', 'Improve error handling by not just printing the stack trace, but also taking appropriate action.', this)" data-category="SOLID Principles Analysis" data-recommendation="Improve error handling by not just printing the stack trace, but also taking appropriate action.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure resources are properly closed to prevent resource leaks, preferably in a finally block or using try-with-resources.</span><button class="fix-button" id="fix-solid-principles-analysis-2" onclick="fixWithAI('SOLID Principles Analysis', 'Ensure resources are properly closed to prevent resource leaks, preferably in a finally block or using try-with-resources.', this)" data-category="SOLID Principles Analysis" data-recommendation="Ensure resources are properly closed to prevent resource leaks, preferably in a finally block or using try-with-resources.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider throwing the IOException to be handled by the caller instead of handling it within the method.</span><button class="fix-button" id="fix-solid-principles-analysis-3" onclick="fixWithAI('SOLID Principles Analysis', 'Consider throwing the IOException to be handled by the caller instead of handling it within the method.', this)" data-category="SOLID Principles Analysis" data-recommendation="Consider throwing the IOException to be handled by the caller instead of handling it within the method.">Fix with AI</button></li>
+<li><span class="recommendation-text">The main method should not be part of this class, it should be in a separate &#39;driver&#39; class.</span><button class="fix-button" id="fix-solid-principles-analysis-4" onclick="fixWithAI('SOLID Principles Analysis', 'The main method should not be part of this class, it should be in a separate &#39;driver&#39; class.', this)" data-category="SOLID Principles Analysis" data-recommendation="The main method should not be part of this class, it should be in a separate &#39;driver&#39; class.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (40.0/100)</h2>
+<div class="reasoning-text">The code does not follow best practices for resource management and error handling. It lacks proper resource closure and error handling mechanisms.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Use try-with-resources to automatically close the FileInputStream.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Use try-with-resources to automatically close the FileInputStream.', this)" data-category="Design Patterns Analysis" data-recommendation="Use try-with-resources to automatically close the FileInputStream.">Fix with AI</button></li>
+<li><span class="recommendation-text">Handle exceptions properly instead of just printing the stack trace.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Handle exceptions properly instead of just printing the stack trace.', this)" data-category="Design Patterns Analysis" data-recommendation="Handle exceptions properly instead of just printing the stack trace.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.out.print for better logging management.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a logging framework instead of System.out.print for better logging management.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a logging framework instead of System.out.print for better logging management.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add a finally block to ensure resources are closed even if an exception occurs.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Add a finally block to ensure resources are closed even if an exception occurs.', this)" data-category="Design Patterns Analysis" data-recommendation="Add a finally block to ensure resources are closed even if an exception occurs.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a design pattern like Factory or Singleton for creating instances of FileInputStream if they are frequently used.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a design pattern like Factory or Singleton for creating instances of FileInputStream if they are frequently used.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a design pattern like Factory or Singleton for creating instances of FileInputStream if they are frequently used.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (60.0/100)</h2>
+<div class="reasoning-text">The code does not handle exceptions properly and does not close resources which can lead to resource leaks. There are no obvious security vulnerabilities like injection flaws or insecure data handling.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Use a finally block or try-with-resources to ensure the FileInputStream is closed.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Use a finally block or try-with-resources to ensure the FileInputStream is closed.', this)" data-category="Security Analysis" data-recommendation="Use a finally block or try-with-resources to ensure the FileInputStream is closed.">Fix with AI</button></li>
+<li><span class="recommendation-text">Instead of just printing the stack trace, handle exceptions in a way that does not reveal potentially sensitive information.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Instead of just printing the stack trace, handle exceptions in a way that does not reveal potentially sensitive information.', this)" data-category="Security Analysis" data-recommendation="Instead of just printing the stack trace, handle exceptions in a way that does not reveal potentially sensitive information.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a logging framework instead of System.out.print for better logging management.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Consider using a logging framework instead of System.out.print for better logging management.', this)" data-category="Security Analysis" data-recommendation="Consider using a logging framework instead of System.out.print for better logging management.">Fix with AI</button></li>
+<li><span class="recommendation-text">Validate and sanitize the &#39;fileName&#39; input to prevent potential path traversal attacks.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Validate and sanitize the &#39;fileName&#39; input to prevent potential path traversal attacks.', this)" data-category="Security Analysis" data-recommendation="Validate and sanitize the &#39;fileName&#39; input to prevent potential path traversal attacks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a security static code analysis tool to automatically detect potential security vulnerabilities.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider using a security static code analysis tool to automatically detect potential security vulnerabilities.', this)" data-category="Security Analysis" data-recommendation="Consider using a security static code analysis tool to automatically detect potential security vulnerabilities.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (60.0/100)</h2>
+<div class="reasoning-text">The code has poor resource management practices and exception handling. The FileInputStream is not closed which can lead to resource leaks, and exceptions are just printed and not properly handled.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Use try-with-resources to automatically close the FileInputStream.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Use try-with-resources to automatically close the FileInputStream.', this)" data-category="Bug Detection Analysis" data-recommendation="Use try-with-resources to automatically close the FileInputStream.">Fix with AI</button></li>
+<li><span class="recommendation-text">Handle exceptions properly instead of just printing the stack trace.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Handle exceptions properly instead of just printing the stack trace.', this)" data-category="Bug Detection Analysis" data-recommendation="Handle exceptions properly instead of just printing the stack trace.">Fix with AI</button></li>
+<li><span class="recommendation-text">Check if the file exists before trying to open it to avoid FileNotFoundException.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Check if the file exists before trying to open it to avoid FileNotFoundException.', this)" data-category="Bug Detection Analysis" data-recommendation="Check if the file exists before trying to open it to avoid FileNotFoundException.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider the case where the file is empty or cannot be read.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Consider the case where the file is empty or cannot be read.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider the case where the file is empty or cannot be read.">Fix with AI</button></li>
+<li><span class="recommendation-text">Make sure to close the FileInputStream in a finally block if not using try-with-resources.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Make sure to close the FileInputStream in a finally block if not using try-with-resources.', this)" data-category="Bug Detection Analysis" data-recommendation="Make sure to close the FileInputStream in a finally block if not using try-with-resources.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>12.5</td></tr>
+<tr><td>Lines of code</td><td>24</td></tr>
+<tr><td>Number of methods</td><td>2</td></tr>
+<tr><td>Number of classes</td><td>1</td></tr>
+<tr><td>Cyclomatic complexity</td><td>3</td></tr>
+<tr><td>Code complexity</td><td>LOW</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 13:48:04 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>

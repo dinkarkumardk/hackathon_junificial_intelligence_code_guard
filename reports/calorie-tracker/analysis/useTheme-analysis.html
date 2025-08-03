@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>useTheme.ts - Detailed Analysis</title>
+<style>
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
+.container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+.header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #007acc; }
+.header h1 { color: #007acc; margin: 0; font-size: 2.2em; }
+.back-link { display: inline-block; margin-bottom: 20px; color: #007acc; text-decoration: none; font-weight: bold; }
+.back-link:hover { text-decoration: underline; }
+.summary-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border-left: 4px solid #007acc; }
+.score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+.score-item { background: white; padding: 15px; border-radius: 6px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.score-value { font-size: 1.8em; font-weight: bold; color: #007acc; }
+.score-label { color: #666; margin-top: 5px; font-size: 0.9em; }
+.analysis-section { margin: 30px 0; padding: 20px; background: #fafafa; border-radius: 8px; border: 1px solid #e0e0e0; }
+.analysis-section h2 { color: #333; margin-bottom: 15px; border-bottom: 2px solid #007acc; padding-bottom: 8px; }
+.reasoning-text { color: #555; line-height: 1.6; margin-bottom: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #007acc; }
+.recommendations { margin-top: 20px; }
+.recommendations h3 { color: #007acc; margin-bottom: 10px; }
+.recommendations ul { margin: 0; padding-left: 25px; }
+.recommendations li { margin: 8px 0; color: #555; line-height: 1.5; display: flex; justify-content: space-between; align-items: flex-start; }
+.recommendation-text { flex: 1; margin-right: 10px; }
+.fix-button { background: linear-gradient(45deg, #007acc, #005999); color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; font-weight: bold; transition: all 0.3s ease; white-space: nowrap; }
+.fix-button:hover { background: linear-gradient(45deg, #005999, #003d73); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+.fix-button:active { transform: translateY(0); }
+.fix-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+.fix-status { margin-left: 5px; font-size: 0.8em; }
+.fix-success { color: #28a745; }
+.fix-error { color: #dc3545; }
+.fix-loading { color: #ffc107; }
+.metrics-section { margin: 30px 0; }
+.metrics-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+.metrics-table th, .metrics-table td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+.metrics-table th { background-color: #007acc; color: white; }
+.quality-indicator { padding: 5px 10px; border-radius: 4px; color: white; font-weight: bold; text-align: center; }
+.quality-green { background-color: #28a745; }
+.quality-yellow { background-color: #ffc107; color: black; }
+.quality-red { background-color: #dc3545; }
+.final-score { font-size: 2.5em; font-weight: bold; color: #007acc; text-align: center; margin: 20px 0; }
+</style>
+<script>
+function fixWithAI(category, recommendation, button) {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Fixing...';
+    button.style.background = '#ffc107';
+    
+    // Create status indicator
+    const statusSpan = document.createElement('span');
+    statusSpan.className = 'fix-status fix-loading';
+    statusSpan.textContent = ' ⏳';
+    button.parentNode.appendChild(statusSpan);
+    
+    // Simulate AI processing (replace with actual API call)
+    setTimeout(() => {
+        // For demo purposes, randomly succeed or fail
+        const success = Math.random() > 0.3;
+        
+        if (success) {
+            button.textContent = 'Fixed ✓';
+            button.style.background = '#28a745';
+            statusSpan.className = 'fix-status fix-success';
+            statusSpan.textContent = ' Applied';
+            
+            // Show success message
+            showNotification('Fix applied successfully for: ' + category, 'success');
+        } else {
+            button.textContent = 'Retry';
+            button.style.background = '#dc3545';
+            button.disabled = false;
+            statusSpan.className = 'fix-status fix-error';
+            statusSpan.textContent = ' Failed';
+            
+            // Show error message
+            showNotification('Failed to apply fix. Please try again.', 'error');
+        }
+    }, 2000 + Math.random() * 3000); // 2-5 second delay
+}
+
+function showNotification(message, type) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed; top: 20px; right: 20px; z-index: 1000;
+        padding: 12px 20px; border-radius: 6px; color: white;
+        font-weight: bold; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transform: translateX(100%); transition: transform 0.3s ease;
+        background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Slide in
+    setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+    
+    // Slide out and remove
+    setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 4000);
+}
+</script>
+</head>
+<body>
+<div class="container">
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+<div class="header">
+<h1>useTheme.ts</h1>
+<p>Detailed Code Analysis Results</p>
+</div>
+<div class="summary-card">
+<div class="final-score">95.0</div>
+<div style="text-align: center;">
+<span class="quality-indicator quality-green">High Quality</span></div></div>
+<div class="score-grid">
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Code Quality</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">SOLID Principles</div>
+</div>
+<div class="score-item">
+<div class="score-value">90.0</div>
+<div class="score-label">Design Patterns</div>
+</div>
+<div class="score-item">
+<div class="score-value">95.0</div>
+<div class="score-label">Security</div>
+</div>
+<div class="score-item">
+<div class="score-value">100.0</div>
+<div class="score-label">Bug Detection</div>
+</div>
+</div>
+<div class="analysis-section">
+<h2>Code Quality Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is clean, concise, and follows good practices. It could benefit from some comments to explain what the function does and why certain decisions were made.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Add comments to explain the purpose of the function and its expected input and output.</span><button class="fix-button" id="fix-code-quality-analysis-0" onclick="fixWithAI('Code Quality Analysis', 'Add comments to explain the purpose of the function and its expected input and output.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to explain the purpose of the function and its expected input and output.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to explain why an error is thrown when &#39;ctx&#39; is null or undefined.</span><button class="fix-button" id="fix-code-quality-analysis-1" onclick="fixWithAI('Code Quality Analysis', 'Add comments to explain why an error is thrown when &#39;ctx&#39; is null or undefined.', this)" data-category="Code Quality Analysis" data-recommendation="Add comments to explain why an error is thrown when &#39;ctx&#39; is null or undefined.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding a brief description of the &#39;ThemeContextType&#39; type for clarity.</span><button class="fix-button" id="fix-code-quality-analysis-2" onclick="fixWithAI('Code Quality Analysis', 'Consider adding a brief description of the &#39;ThemeContextType&#39; type for clarity.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding a brief description of the &#39;ThemeContextType&#39; type for clarity.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding error handling for the case when &#39;useContext&#39; fails to retrieve the context.</span><button class="fix-button" id="fix-code-quality-analysis-3" onclick="fixWithAI('Code Quality Analysis', 'Consider adding error handling for the case when &#39;useContext&#39; fails to retrieve the context.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding error handling for the case when &#39;useContext&#39; fails to retrieve the context.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding unit tests to ensure the function behaves as expected.</span><button class="fix-button" id="fix-code-quality-analysis-4" onclick="fixWithAI('Code Quality Analysis', 'Consider adding unit tests to ensure the function behaves as expected.', this)" data-category="Code Quality Analysis" data-recommendation="Consider adding unit tests to ensure the function behaves as expected.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>SOLID Principles Analysis (100.0/100)</h2>
+<div class="reasoning-text">The provided TypeScript code adheres excellently to the Single Responsibility Principle. The function useTheme() has a single responsibility of providing the theme context.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">No recommendations as the code adheres to the Single Responsibility Principle perfectly.</span><button class="fix-button" id="fix-solid-principles-analysis-0" onclick="fixWithAI('SOLID Principles Analysis', 'No recommendations as the code adheres to the Single Responsibility Principle perfectly.', this)" data-category="SOLID Principles Analysis" data-recommendation="No recommendations as the code adheres to the Single Responsibility Principle perfectly.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Design Patterns Analysis (90.0/100)</h2>
+<div class="reasoning-text">The code is using the Context API from React, which is a good design pattern for sharing state across components. However, it lacks error handling for the case when the ThemeContext is not provided.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Consider adding a default value to the ThemeContext to avoid throwing an error when it&#39;s not provided.</span><button class="fix-button" id="fix-design-patterns-analysis-0" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding a default value to the ThemeContext to avoid throwing an error when it&#39;s not provided.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding a default value to the ThemeContext to avoid throwing an error when it&#39;s not provided.">Fix with AI</button></li>
+<li><span class="recommendation-text">Add comments to the code to explain the purpose of the useTheme function and the error condition.</span><button class="fix-button" id="fix-design-patterns-analysis-1" onclick="fixWithAI('Design Patterns Analysis', 'Add comments to the code to explain the purpose of the useTheme function and the error condition.', this)" data-category="Design Patterns Analysis" data-recommendation="Add comments to the code to explain the purpose of the useTheme function and the error condition.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using TypeScript&#39;s non-null assertion operator (!) after useContext to ensure that TypeScript understands the context will always be defined.</span><button class="fix-button" id="fix-design-patterns-analysis-2" onclick="fixWithAI('Design Patterns Analysis', 'Consider using TypeScript&#39;s non-null assertion operator (!) after useContext to ensure that TypeScript understands the context will always be defined.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using TypeScript&#39;s non-null assertion operator (!) after useContext to ensure that TypeScript understands the context will always be defined.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a more specific error message that includes the component or the context that is missing the ThemeContext provider.</span><button class="fix-button" id="fix-design-patterns-analysis-3" onclick="fixWithAI('Design Patterns Analysis', 'Consider using a more specific error message that includes the component or the context that is missing the ThemeContext provider.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider using a more specific error message that includes the component or the context that is missing the ThemeContext provider.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider adding tests to ensure the function behaves as expected when the ThemeContext is and isn&#39;t provided.</span><button class="fix-button" id="fix-design-patterns-analysis-4" onclick="fixWithAI('Design Patterns Analysis', 'Consider adding tests to ensure the function behaves as expected when the ThemeContext is and isn&#39;t provided.', this)" data-category="Design Patterns Analysis" data-recommendation="Consider adding tests to ensure the function behaves as expected when the ThemeContext is and isn&#39;t provided.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Security Analysis (95.0/100)</h2>
+<div class="reasoning-text">The code is generally secure as it doesn&#39;t handle sensitive data or perform risky operations. However, it throws an error without any sanitization or specific error handling.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Implement specific error handling to prevent potential information leakage.</span><button class="fix-button" id="fix-security-analysis-0" onclick="fixWithAI('Security Analysis', 'Implement specific error handling to prevent potential information leakage.', this)" data-category="Security Analysis" data-recommendation="Implement specific error handling to prevent potential information leakage.">Fix with AI</button></li>
+<li><span class="recommendation-text">Sanitize the error message before throwing it to avoid potential cross-site scripting (XSS) attacks.</span><button class="fix-button" id="fix-security-analysis-1" onclick="fixWithAI('Security Analysis', 'Sanitize the error message before throwing it to avoid potential cross-site scripting (XSS) attacks.', this)" data-category="Security Analysis" data-recommendation="Sanitize the error message before throwing it to avoid potential cross-site scripting (XSS) attacks.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using a linter or static analysis tool to automatically check for common security issues.</span><button class="fix-button" id="fix-security-analysis-2" onclick="fixWithAI('Security Analysis', 'Consider using a linter or static analysis tool to automatically check for common security issues.', this)" data-category="Security Analysis" data-recommendation="Consider using a linter or static analysis tool to automatically check for common security issues.">Fix with AI</button></li>
+<li><span class="recommendation-text">Always validate and sanitize input data, even if it doesn&#39;t seem to be directly user-controlled.</span><button class="fix-button" id="fix-security-analysis-3" onclick="fixWithAI('Security Analysis', 'Always validate and sanitize input data, even if it doesn&#39;t seem to be directly user-controlled.', this)" data-category="Security Analysis" data-recommendation="Always validate and sanitize input data, even if it doesn&#39;t seem to be directly user-controlled.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider using TypeScript&#39;s strict mode to catch potential type-related bugs at compile time.</span><button class="fix-button" id="fix-security-analysis-4" onclick="fixWithAI('Security Analysis', 'Consider using TypeScript&#39;s strict mode to catch potential type-related bugs at compile time.', this)" data-category="Security Analysis" data-recommendation="Consider using TypeScript&#39;s strict mode to catch potential type-related bugs at compile time.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="analysis-section">
+<h2>Bug Detection Analysis (100.0/100)</h2>
+<div class="reasoning-text">The provided TypeScript code seems to be bug-free. It uses the useContext hook to access the ThemeContext and throws an error if the context is not available, which is a good practice.</div>
+<div class="recommendations">
+<h3>Recommendations</h3>
+<ul>
+<li><span class="recommendation-text">Ensure that the ThemeContext is provided in the component tree.</span><button class="fix-button" id="fix-bug-detection-analysis-0" onclick="fixWithAI('Bug Detection Analysis', 'Ensure that the ThemeContext is provided in the component tree.', this)" data-category="Bug Detection Analysis" data-recommendation="Ensure that the ThemeContext is provided in the component tree.">Fix with AI</button></li>
+<li><span class="recommendation-text">Make sure that the ThemeContextType is correctly defined.</span><button class="fix-button" id="fix-bug-detection-analysis-1" onclick="fixWithAI('Bug Detection Analysis', 'Make sure that the ThemeContextType is correctly defined.', this)" data-category="Bug Detection Analysis" data-recommendation="Make sure that the ThemeContextType is correctly defined.">Fix with AI</button></li>
+<li><span class="recommendation-text">Consider handling the error thrown when the context is not available.</span><button class="fix-button" id="fix-bug-detection-analysis-2" onclick="fixWithAI('Bug Detection Analysis', 'Consider handling the error thrown when the context is not available.', this)" data-category="Bug Detection Analysis" data-recommendation="Consider handling the error thrown when the context is not available.">Fix with AI</button></li>
+<li><span class="recommendation-text">Ensure that the useContext hook is used within a functional component.</span><button class="fix-button" id="fix-bug-detection-analysis-3" onclick="fixWithAI('Bug Detection Analysis', 'Ensure that the useContext hook is used within a functional component.', this)" data-category="Bug Detection Analysis" data-recommendation="Ensure that the useContext hook is used within a functional component.">Fix with AI</button></li>
+<li><span class="recommendation-text">Make sure that the ThemeContext is imported correctly.</span><button class="fix-button" id="fix-bug-detection-analysis-4" onclick="fixWithAI('Bug Detection Analysis', 'Make sure that the ThemeContext is imported correctly.', this)" data-category="Bug Detection Analysis" data-recommendation="Make sure that the ThemeContext is imported correctly.">Fix with AI</button></li>
+</ul></div>
+</div>
+<div class="metrics-section">
+<h2>File Metrics</h2>
+<table class="metrics-table">
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Comment ratio</td><td>0.0</td></tr>
+<tr><td>Lines of code</td><td>0</td></tr>
+<tr><td>Number of methods</td><td>0</td></tr>
+<tr><td>Number of classes</td><td>0</td></tr>
+<tr><td>Cyclomatic complexity</td><td>0</td></tr>
+<tr><td>Code complexity</td><td>UNKNOWN</td></tr>
+</table></div>
+<div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd; color: #666;">
+<p>Analysis generated on 2025-08-03 12:58:17 by Code Guard</p>
+<a href="../technical-report.html" class="back-link">← Back to Technical Report</a>
+</div>
+</div>
+</body>
+</html>
