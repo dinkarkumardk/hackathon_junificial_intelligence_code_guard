@@ -5,7 +5,7 @@ A minimal code analysis tool that scores code files and generates technical & no
 ## Features
 
 - **Code Quality Analysis**: Analyzes code for readability, maintainability, security, and documentation
-- **Multi-Criteria Scoring**: Evaluates Code Quality, SOLID principles, Design Patterns, Clean Code, and Security
+- **Multi-Criteria Scoring**: Evaluates Code Quality, Single Responsibility Principle, Design Patterns, Security, and Bug Detection
 - **Weighted Final Score**: Calculates final score with customizable weights
 - **HTML Report Generation**: Creates both technical and non-technical reports
 - **JSON Export**: Supports JSON format for integration with other tools
@@ -278,7 +278,7 @@ spec:
 The final score is calculated using weighted criteria:
 
 ```
-Final Score = (Code Quality × 0.30) + (SOLID × 0.25) + (Design Patterns × 0.15) + (Clean Code × 0.20) + (Security × 0.10)
+Final Score = (Code Quality × 0.25) + (Single Responsibility × 0.20) + (Design Patterns × 0.15) + (Security × 0.20) + (Bug Detection × 0.20)
 ```
 
 ### Quality Indicators
