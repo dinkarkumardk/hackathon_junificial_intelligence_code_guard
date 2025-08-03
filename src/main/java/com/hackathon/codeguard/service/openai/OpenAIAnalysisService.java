@@ -299,11 +299,11 @@ public class OpenAIAnalysisService {
         return getResponseFromOpenAI(prompt);
     }
     private String analyzeKtDesign(String code, String language) throws Exception {
-        String prompt = "Provide a high-level architectural overview of your system. Include:\n- Core components (e.g., frontend, backend, services, databases)\n- Technology stack used (languages, frameworks, tools, infrastructure)\n- How components interact with each other (e.g., API calls, message queues, DB connections)\nIf available, include or reference an architecture diagram.\n\nCode:\n" + code;
+        String prompt = "Provide a high-level architectural overview of your system in 2–3 sentences. Include:\n- Core components (e.g., frontend, backend, services, databases)\n- Technology stack used (languages, frameworks, tools, infrastructure)\n- How components interact with each other (e.g., API calls, message queues, DB connections)\nIf available, include or reference an architecture diagram.\n\nCode:\n" + code;
         return getResponseFromOpenAI(prompt);
     }
     private String analyzeKtModules(String code, String language) throws Exception {
-        String prompt = "List the major functional modules in your system (e.g., User Management, Payment Processing, Analytics Dashboard). For each:\n- Briefly describe its responsibilities and what it does\n- Highlight any important business logic (e.g., validations, workflows, data rules) that it implements\n\nCode:\n" + code;
+        String prompt = "List the major functional modules in your system (e.g., User Management, Payment Processing, Analytics Dashboard) in 2–3 sentences. For each:\n- Briefly describe its responsibilities and what it does\n- Highlight any important business logic (e.g., validations, workflows, data rules) that it implements\n\nCode:\n" + code;
         return getResponseFromOpenAI(prompt);
     }
     // Remove extractKt* methods
