@@ -54,7 +54,7 @@ public class OpenAIAnalysisService {
     /**
      * Analyzes a single code file using OpenAI API
      */
-    public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode) throws Exception {
+    public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode, boolean ktEnabled) throws Exception {
         logger.debug("Analyzing file with OpenAI: {}", filePath);
         
         try {
@@ -103,6 +103,21 @@ public class OpenAIAnalysisService {
             // Get issues and suggestions (these have their own exception handling)
             result.setIssues(identifyIssues(fileContent, language));
             result.setSuggestions(generateSuggestions(fileContent, language, mode));
+            
+            // Generate KT (Knowledge Transfer) data if enabled
+            if (ktEnabled) {
+                try {
+                    result.setKtPurpose(generateKTPurpose(fileContent, language, filePath));
+                    result.setKtDesign(generateKTDesign(fileContent, language, filePath));
+                    result.setKtModules(generateKTModules(fileContent, language, filePath));
+                    logger.debug("KT data generated for {}", filePath.getFileName());
+                } catch (Exception e) {
+                    logger.warn("Failed to generate KT data for {}: {}", filePath.getFileName(), e.getMessage());
+                    result.setKtPurpose("Unable to generate KT purpose due to API error");
+                    result.setKtDesign("Unable to generate KT design due to API error");
+                    result.setKtModules("Unable to generate KT modules due to API error");
+                }
+            }
             
             // Log analysis completion with metrics
             logger.info("Analysis completed for {}: Final Score = {}, Lines = {}, Functions = {}, CC = {}", 
@@ -521,6 +536,128 @@ public class OpenAIAnalysisService {
             defaultMetrics.put("commentRatio", 0.0);
             defaultMetrics.put("codeComplexity", "UNKNOWN");
             return defaultMetrics;
+        }
+    }
+
+    /**
+     * Generates KT purpose information for a code file
+     */
+    private String generateKTPurpose(String code, String language, Path filePath) throws Exception {
+        String prompt = String.format(
+            "Analyze the following %s code file (%s) and describe its main purpose and functionality. " +
+            "This will be used for Knowledge Transfer documentation for new team members. " +
+            "Focus on what this file does, its role in the system, and key responsibilities:\\n\\n" +
+            "Code:\\n%s\\n\\n" +
+            "Provide a clear, concise description in 2-3 sentences.",
+            language, filePath.getFileName(), code
+        );
+        
+        try {
+            return getResponseFromOpenAI(prompt);
+        } catch (Exception e) {
+            logger.warn("Failed to generate KT purpose for {} code: {}", language, e.getMessage());
+            return "Unable to analyze file purpose due to API error: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Generates KT design information for a code file
+     */
+    private String generateKTDesign(String code, String language, Path filePath) throws Exception {
+        String prompt = String.format(
+            "Analyze the following %s code file (%s) and describe its design approach, patterns used, " +
+            "and architectural decisions. This will be used for Knowledge Transfer documentation. " +
+            "Focus on design patterns, class structure, key algorithms, and implementation choices:\\n\\n" +
+            "Code:\\n%s\\n\\n" +
+            "Provide a clear description of the design approach in 2-3 sentences.",
+            language, filePath.getFileName(), code
+        );
+        
+        try {
+            return getResponseFromOpenAI(prompt);
+        } catch (Exception e) {
+            logger.warn("Failed to generate KT design for {} code: {}", language, e.getMessage());
+            return "Unable to analyze file design due to API error: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Generates KT modules information for a code file
+     */
+    private String generateKTModules(String code, String language, Path filePath) throws Exception {
+        String prompt = String.format(
+            "Analyze the following %s code file (%s) and describe its relationships with other modules, " +
+            "dependencies, and how it fits into the larger system. This will be used for Knowledge Transfer. " +
+            "Focus on imports, dependencies, interfaces, and integration points:\\n\\n" +
+            "Code:\\n%s\\n\\n" +
+            "Provide a clear description of module relationships in 2-3 sentences.",
+            language, filePath.getFileName(), code
+        );
+        
+        try {
+            return getResponseFromOpenAI(prompt);
+        } catch (Exception e) {
+            logger.warn("Failed to generate KT modules for {} code: {}", language, e.getMessage());
+            return "Unable to analyze file modules due to API error: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Summarizes purpose information for KT documentation
+     */
+    public String summarizePurpose(String purposeData) throws Exception {
+        String prompt = String.format(
+            "Summarize the following purpose information for Knowledge Transfer documentation. " +
+            "Keep it concise but comprehensive, suitable for new team members:\\n\\n%s\\n\\n" +
+            "Return a well-structured summary in 2-3 paragraphs.",
+            purposeData
+        );
+        
+        try {
+            return getResponseFromOpenAI(prompt);
+        } catch (Exception e) {
+            logger.warn("Failed to summarize purpose data: {}", e.getMessage());
+            return "Unable to generate purpose summary due to API error: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Summarizes design information for KT documentation
+     */
+    public String summarizeDesign(String designData) throws Exception {
+        String prompt = String.format(
+            "Summarize the following design information for Knowledge Transfer documentation. " +
+            "Focus on architectural decisions, design patterns, and key implementation choices. " +
+            "Keep it suitable for new team members:\\n\\n%s\\n\\n" +
+            "Return a well-structured summary in 2-3 paragraphs.",
+            designData
+        );
+        
+        try {
+            return getResponseFromOpenAI(prompt);
+        } catch (Exception e) {
+            logger.warn("Failed to summarize design data: {}", e.getMessage());
+            return "Unable to generate design summary due to API error: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Summarizes modules information for KT documentation
+     */
+    public String summarizeModules(String modulesData) throws Exception {
+        String prompt = String.format(
+            "Summarize the following modules information for Knowledge Transfer documentation. " +
+            "Focus on module responsibilities, dependencies, and relationships. " +
+            "Keep it suitable for new team members:\\n\\n%s\\n\\n" +
+            "Return a well-structured summary in 2-3 paragraphs.",
+            modulesData
+        );
+        
+        try {
+            return getResponseFromOpenAI(prompt);
+        } catch (Exception e) {
+            logger.warn("Failed to summarize modules data: {}", e.getMessage());
+            return "Unable to generate modules summary due to API error: " + e.getMessage();
         }
     }
 }

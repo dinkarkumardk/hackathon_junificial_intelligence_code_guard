@@ -55,6 +55,22 @@ public class FileAnalysisResult {
     @JsonProperty("bugDetectionReason")
     private String bugDetectionReason;
     
+    // Recommendation fields for concise points
+    @JsonProperty("codeQualityRecommendations")
+    private List<String> codeQualityRecommendations;
+    
+    @JsonProperty("solidRecommendations")
+    private List<String> solidRecommendations;
+    
+    @JsonProperty("designPatternsRecommendations")
+    private List<String> designPatternsRecommendations;
+    
+    @JsonProperty("securityRecommendations")
+    private List<String> securityRecommendations;
+    
+    @JsonProperty("bugDetectionRecommendations")
+    private List<String> bugDetectionRecommendations;
+    
     @JsonProperty("issues")
     private List<CodeIssue> issues;
     
@@ -64,18 +80,15 @@ public class FileAnalysisResult {
     @JsonProperty("metrics")
     private Map<String, Object> metrics;
 
+    // KT (Knowledge Transfer) fields
     @JsonProperty("ktPurpose")
     private String ktPurpose;
+    
     @JsonProperty("ktDesign")
     private String ktDesign;
+    
     @JsonProperty("ktModules")
     private String ktModules;
-    @JsonProperty("ktDataFlow")
-    private String ktDataFlow;
-    @JsonProperty("ktExecution")
-    private String ktExecution;
-    @JsonProperty("ktTools")
-    private String ktTools;
 
     // Constructors
     public FileAnalysisResult() {}
@@ -153,19 +166,42 @@ public class FileAnalysisResult {
     
     public String getBugDetectionReason() { return bugDetectionReason; }
     public void setBugDetectionReason(String bugDetectionReason) { this.bugDetectionReason = bugDetectionReason; }
+    
+    // Recommendation getters and setters
+    public List<String> getCodeQualityRecommendations() { return codeQualityRecommendations; }
+    public void setCodeQualityRecommendations(List<String> codeQualityRecommendations) { 
+        this.codeQualityRecommendations = codeQualityRecommendations; 
+    }
+    
+    public List<String> getSolidRecommendations() { return solidRecommendations; }
+    public void setSolidRecommendations(List<String> solidRecommendations) { 
+        this.solidRecommendations = solidRecommendations; 
+    }
+    
+    public List<String> getDesignPatternsRecommendations() { return designPatternsRecommendations; }
+    public void setDesignPatternsRecommendations(List<String> designPatternsRecommendations) { 
+        this.designPatternsRecommendations = designPatternsRecommendations; 
+    }
+    
+    public List<String> getSecurityRecommendations() { return securityRecommendations; }
+    public void setSecurityRecommendations(List<String> securityRecommendations) { 
+        this.securityRecommendations = securityRecommendations; 
+    }
 
+    public List<String> getBugDetectionRecommendations() { return bugDetectionRecommendations; }
+    public void setBugDetectionRecommendations(List<String> bugDetectionRecommendations) { 
+        this.bugDetectionRecommendations = bugDetectionRecommendations; 
+    }
+
+    // KT (Knowledge Transfer) getters and setters
     public String getKtPurpose() { return ktPurpose; }
     public void setKtPurpose(String ktPurpose) { this.ktPurpose = ktPurpose; }
+    
     public String getKtDesign() { return ktDesign; }
     public void setKtDesign(String ktDesign) { this.ktDesign = ktDesign; }
+    
     public String getKtModules() { return ktModules; }
     public void setKtModules(String ktModules) { this.ktModules = ktModules; }
-    public String getKtDataFlow() { return ktDataFlow; }
-    public void setKtDataFlow(String ktDataFlow) { this.ktDataFlow = ktDataFlow; }
-    public String getKtExecution() { return ktExecution; }
-    public void setKtExecution(String ktExecution) { this.ktExecution = ktExecution; }
-    public String getKtTools() { return ktTools; }
-    public void setKtTools(String ktTools) { this.ktTools = ktTools; }
 
     /**
      * Quality indicator enum for color coding
