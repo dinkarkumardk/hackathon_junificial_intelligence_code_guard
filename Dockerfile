@@ -25,6 +25,7 @@ RUN apk add --no-cache \
     bash \
     curl \
     git \
+    dos2unix \
     && rm -rf /var/cache/apk/*
 
 # Create app user
@@ -41,9 +42,10 @@ COPY --from=build /app/target/code-guard-*.jar app.jar
 RUN mkdir -p /app/reports /app/logs /app/input && \
     chown -R appuser:appgroup /app
 
-# Copy entrypoint script
-COPY docker/entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh && \
+# Copy entrypoint script and fix line endings
+COPY ./docker/entrypoint.sh /app/entrypoint.sh
+RUN dos2unix /app/entrypoint.sh && \
+    chmod +x /app/entrypoint.sh && \
     chown appuser:appgroup /app/entrypoint.sh
 
 # Switch to non-root user
