@@ -529,7 +529,7 @@ public class OpenAIAnalysisService {
 
     // --- Replace extractKt* with analyzeKt* using new prompts ---
     private String analyzeKtPurpose(String code, String language) throws Exception {
-        String prompt = "Describe the purpose of your system in 2–3 sentences. What is the core problem it aims to solve? Who are the primary users or stakeholders (e.g., end users, developers, admins, business teams)? What are the system's main objectives (e.g., automation, monitoring, data analysis, user experience enhancement)?\n\nCode:\n" + code;
+        String prompt = "Describe the purpose of this file  in 2–3 sentences. What is the core problem it aims to solve? Who are the primary users or stakeholders (e.g., end users, developers, admins, business teams)? What are the system's main objectives (e.g., automation, monitoring, data analysis, user experience enhancement)?\n\nCode:\n" + code;
         return getResponseFromOpenAI(prompt);
     }
     private String analyzeKtDesign(String code, String language) throws Exception {
@@ -537,7 +537,7 @@ public class OpenAIAnalysisService {
         return getResponseFromOpenAI(prompt);
     }
     private String analyzeKtModules(String code, String language) throws Exception {
-        String prompt = "List the major functional modules in your system (e.g., User Management, Payment Processing, Analytics Dashboard) in 2–3 sentences. For each:\n- Briefly describe its responsibilities and what it does\n- Highlight any important business logic (e.g., validations, workflows, data rules) that it implements\n\nCode:\n" + code;
+        String prompt = "List the major functional modules in this file (e.g., User Management, Payment Processing, Analytics Dashboard) in 2–3 sentences. For each:\n- Briefly describe its responsibilities and what it does\n- Highlight any important business logic (e.g., validations, workflows, data rules) that it implements\n\nCode:\n" + code;
         return getResponseFromOpenAI(prompt);
     }
     // Remove extractKt* methods

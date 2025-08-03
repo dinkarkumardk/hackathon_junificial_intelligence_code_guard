@@ -499,7 +499,7 @@ public class ReportGenerationService {
         Path ktDir = Paths.get(outputDir, "kt");
         Files.createDirectories(ktDir);
         OpenAIAnalysisService openAIService = new OpenAIAnalysisService();
-        // Merge and summarize KT data for each section
+        // Merge KT data for each section
         String mergedPurpose = result.getFileResults().stream()
             .map(FileAnalysisResult::getKtPurpose)
             .filter(s -> s != null && !s.isBlank())
@@ -512,14 +512,13 @@ public class ReportGenerationService {
             .map(FileAnalysisResult::getKtModules)
             .filter(s -> s != null && !s.isBlank())
             .reduce("", (a, b) -> a + "\n" + b);
-        // Summarize using OpenAI
-        String summarizedPurpose = mergedPurpose.isBlank() ? "No data from OpenAI." : openAIService.summarizePurpose(mergedPurpose);
-        String summarizedDesign = mergedDesign.isBlank() ? "No data from OpenAI." : openAIService.summarizeDesign(mergedDesign);
-        String summarizedModules = mergedModules.isBlank() ? "No data from OpenAI." : openAIService.summarizeModules(mergedModules);
-        // Generate KT HTML files using summaries
+        // Summarize mergedPurpose and mergedDesign using OpenAI for better readability
+        String summarizedPurpose = mergedPurpose.isBlank() ? "No KT purpose data available." : openAIService.summarizePurpose(mergedPurpose);
+        String summarizedDesign = mergedDesign.isBlank() ? "No KT design data available." : openAIService.summarizeDesign(mergedDesign);
+        // Use raw mergedModules for modules section
         Files.writeString(ktDir.resolve("purpose.html"), buildKTPurposeHtml(summarizedPurpose));
         Files.writeString(ktDir.resolve("design.html"), buildKTDesignHtml(summarizedDesign));
-        Files.writeString(ktDir.resolve("modules.html"), buildKTModulesHtml(summarizedModules));
+        Files.writeString(ktDir.resolve("modules.html"), buildKTModulesHtml(mergedModules.isBlank() ? "No KT modules data available." : mergedModules));
         Files.writeString(ktDir.resolve("index.html"), buildKTIndexHtml());
     }
 
@@ -563,6 +562,42 @@ public class ReportGenerationService {
         """;
     }
 
+    private String formatKTContent(String content) {
+        if (content == null || content.isBlank()) return "<p>No data available.</p>";
+        String[] lines = content.split("\n");
+        StringBuilder formatted = new StringBuilder();
+        int lineCount = 0;
+        List<String> paragraph = new ArrayList<>();
+        List<String> bullets = new ArrayList<>();
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (trimmed.isEmpty()) continue;
+            paragraph.add(trimmed);
+            lineCount++;
+            if (lineCount == 2 || lineCount == 3) {
+                formatted.append("<p>").append(String.join(" ", paragraph)).append("</p>");
+                paragraph.clear();
+                lineCount = 0;
+            }
+        }
+        if (!paragraph.isEmpty()) {
+            formatted.append("<p>").append(String.join(" ", paragraph)).append("</p>");
+        }
+        // Add remaining lines as bullet points
+        for (String line : lines) {
+            String trimmed = line.trim();
+            if (!trimmed.isEmpty()) bullets.add(trimmed);
+        }
+        if (!bullets.isEmpty()) {
+            formatted.append("<ul>");
+            for (String bullet : bullets) {
+                formatted.append("<li>").append(escapeHtml(bullet)).append("</li>");
+            }
+            formatted.append("</ul>");
+        }
+        return formatted.toString();
+    }
+
     private String buildKTPurposeHtml(String summary) {
         String html = String.format("""
         <!DOCTYPE html>
@@ -576,12 +611,12 @@ public class ReportGenerationService {
         <body>
         <div class='container'>
             <h1>Purpose, Key Goals, and Stakeholders</h1>
-            <p>%s</p>
+            %s
             <a href='index.html'>Back to KT Index</a>
         </div>
         </body>
         </html>
-        """, getKTCommonCss(), summary);
+        """, getKTCommonCss(), formatKTContent(summary));
         return html;
     }
 
@@ -598,12 +633,12 @@ public class ReportGenerationService {
         <body>
         <div class='container'>
             <h1>High-Level System Design, Tech Stack, and Component Interactions</h1>
-            <p>%s</p>
+            %s
             <a href='index.html'>Back to KT Index</a>
         </div>
         </body>
         </html>
-        """, getKTCommonCss(), summary);
+        """, getKTCommonCss(), formatKTContent(summary));
         return html;
     }
 
@@ -620,12 +655,12 @@ public class ReportGenerationService {
         <body>
         <div class='container'>
             <h1>Functional Overview of Each Module and Key Business Logic</h1>
-            <p>%s</p>
+            %s
             <a href='index.html'>Back to KT Index</a>
         </div>
         </body>
         </html>
-        """, getKTCommonCss(), summary);
+        """, getKTCommonCss(), formatKTContent(summary));
         return html;
     }
 
