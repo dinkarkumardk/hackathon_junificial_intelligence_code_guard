@@ -113,6 +113,12 @@ public class ReportGenerationService {
                     .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
                     .reasoning-section { margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
                     .reasoning-section h2 { color: #495057; margin-bottom: 15px; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+                    .recommendations-section { margin: 30px 0; padding: 20px; background-color: #e8f5e8; border-radius: 8px; border: 1px solid #c3e6c3; }
+                    .recommendations-section h2 { color: #2d5016; margin-bottom: 15px; border-bottom: 2px solid #c3e6c3; padding-bottom: 10px; }
+                    .metric-recommendations { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                    .metric-recommendations h3 { color: #333; margin-bottom: 10px; font-size: 1.1em; }
+                    .metric-recommendations ul { margin: 10px 0; padding-left: 20px; }
+                    .metric-recommendations li { margin: 5px 0; color: #555; line-height: 1.4; }
                     .reasoning-item { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
                     .reasoning-item h3 { color: #212529; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
                     .reasoning-title { font-weight: bold; color: #495057; margin: 10px 0 5px 0; }
@@ -256,42 +262,115 @@ public class ReportGenerationService {
         // Detailed reasoning section
         html.append("""
             <div class="reasoning-section">
-                <h2>Detailed Analysis Reasoning</h2>
-                <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings for each file:</p>
+                <h2>Detailed Analysis Reasoning & Recommendations</h2>
+                <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings and specific recommendations for each file:</p>
             """);
 
         for (FileAnalysisResult file : result.getFileResults()) {
             html.append(String.format("""
                 <div class="reasoning-item">
                     <h3>%s</h3>
+                """, escapeHtml(file.getFilename())));
+            
+            // Code Quality section
+            html.append(String.format("""
                     <div class="reasoning-title">Code Quality (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
-                    <br>
+                """, 
+                file.getCodeQuality(),
+                escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available")
+            ));
+            
+            // Add code quality recommendations if available
+            if (file.getCodeQualityRecommendations() != null && !file.getCodeQualityRecommendations().isEmpty()) {
+                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
+                for (String rec : file.getCodeQualityRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul></div>");
+            }
+            
+            html.append("<br>");
+            
+            // Single Responsibility Principle section
+            html.append(String.format("""
                     <div class="reasoning-title">Single Responsibility Principle (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
-                    <br>
+                """, 
+                file.getSolid(),
+                escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available")
+            ));
+            
+            // Add SOLID recommendations if available
+            if (file.getSolidRecommendations() != null && !file.getSolidRecommendations().isEmpty()) {
+                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
+                for (String rec : file.getSolidRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul></div>");
+            }
+            
+            html.append("<br>");
+            
+            // Design Patterns section
+            html.append(String.format("""
                     <div class="reasoning-title">Design Patterns (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
-                    <br>
+                """, 
+                file.getDesignPatterns(),
+                escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available")
+            ));
+            
+            // Add design patterns recommendations if available
+            if (file.getDesignPatternsRecommendations() != null && !file.getDesignPatternsRecommendations().isEmpty()) {
+                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
+                for (String rec : file.getDesignPatternsRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul></div>");
+            }
+            
+            html.append("<br>");
+            
+            // Security section
+            html.append(String.format("""
                     <div class="reasoning-title">Security (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
-                    <br>
+                """, 
+                file.getSecurity(),
+                escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available")
+            ));
+            
+            // Add security recommendations if available
+            if (file.getSecurityRecommendations() != null && !file.getSecurityRecommendations().isEmpty()) {
+                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
+                for (String rec : file.getSecurityRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul></div>");
+            }
+            
+            html.append("<br>");
+            
+            // Bug Detection section
+            html.append(String.format("""
                     <div class="reasoning-title">Bug Detection (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
-                </div>
-                """,
-                escapeHtml(file.getFilename()),
-                file.getCodeQuality(),
-                escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available"),
-                file.getSolid(),
-                escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available"),
-                file.getDesignPatterns(),
-                escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available"),
-                file.getSecurity(),
-                escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available"),
+                """, 
                 file.getBugDetection(),
                 escapeHtml(file.getBugDetectionReason() != null ? file.getBugDetectionReason() : "No detailed reasoning available")
             ));
+            
+            // Add bug detection recommendations if available
+            if (file.getBugDetectionRecommendations() != null && !file.getBugDetectionRecommendations().isEmpty()) {
+                html.append("<div class=\"metric-recommendations\"><strong>Key Recommendations:</strong><ul>");
+                for (String rec : file.getBugDetectionRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul></div>");
+            }
+            
+            html.append("</div>");
         }
 
         html.append("</div>");
@@ -513,9 +592,30 @@ public class ReportGenerationService {
             .filter(s -> s != null && !s.isBlank())
             .reduce("", (a, b) -> a + "\n" + b);
         // Summarize using OpenAI
-        String summarizedPurpose = mergedPurpose.isBlank() ? "No data from OpenAI." : openAIService.summarizePurpose(mergedPurpose);
-        String summarizedDesign = mergedDesign.isBlank() ? "No data from OpenAI." : openAIService.summarizeDesign(mergedDesign);
-        String summarizedModules = mergedModules.isBlank() ? "No data from OpenAI." : openAIService.summarizeModules(mergedModules);
+        String summarizedPurpose;
+        String summarizedDesign;
+        String summarizedModules;
+        
+        try {
+            summarizedPurpose = mergedPurpose.isBlank() ? "No data from OpenAI." : openAIService.summarizePurpose(mergedPurpose);
+        } catch (Exception e) {
+            logger.warn("Failed to summarize purpose data: {}", e.getMessage());
+            summarizedPurpose = "Unable to generate purpose summary due to API error.";
+        }
+        
+        try {
+            summarizedDesign = mergedDesign.isBlank() ? "No data from OpenAI." : openAIService.summarizeDesign(mergedDesign);
+        } catch (Exception e) {
+            logger.warn("Failed to summarize design data: {}", e.getMessage());
+            summarizedDesign = "Unable to generate design summary due to API error.";
+        }
+        
+        try {
+            summarizedModules = mergedModules.isBlank() ? "No data from OpenAI." : openAIService.summarizeModules(mergedModules);
+        } catch (Exception e) {
+            logger.warn("Failed to summarize modules data: {}", e.getMessage());
+            summarizedModules = "Unable to generate modules summary due to API error.";
+        }
         // Generate KT HTML files using summaries
         Files.writeString(ktDir.resolve("purpose.html"), buildKTPurposeHtml(summarizedPurpose));
         Files.writeString(ktDir.resolve("design.html"), buildKTDesignHtml(summarizedDesign));
