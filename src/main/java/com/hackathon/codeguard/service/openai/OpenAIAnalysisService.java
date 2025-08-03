@@ -80,22 +80,27 @@ public class OpenAIAnalysisService {
             ScoreWithReason codeQualityResult = analyzeCodeQuality(fileContent, language);
             result.setCodeQuality(codeQualityResult.getScore());
             result.setCodeQualityReason(codeQualityResult.getReason());
+            result.setCodeQualityRecommendations(codeQualityResult.getRecommendations());
             
             ScoreWithReason srpResult = analyzeSingleResponsibilityPrinciple(fileContent, language);
             result.setSolid(srpResult.getScore());
             result.setSolidReason(srpResult.getReason());
+            result.setSolidRecommendations(srpResult.getRecommendations());
             
             ScoreWithReason designPatternsResult = analyzeDesignPatterns(fileContent, language);
             result.setDesignPatterns(designPatternsResult.getScore());
             result.setDesignPatternsReason(designPatternsResult.getReason());
+            result.setDesignPatternsRecommendations(designPatternsResult.getRecommendations());
             
             ScoreWithReason securityResult = analyzeSecurity(fileContent, language);
             result.setSecurity(securityResult.getScore());
             result.setSecurityReason(securityResult.getReason());
+            result.setSecurityRecommendations(securityResult.getRecommendations());
             
             ScoreWithReason bugDetectionResult = analyzeBugDetection(fileContent, language);
             result.setBugDetection(bugDetectionResult.getScore());
             result.setBugDetectionReason(bugDetectionResult.getReason());
+            result.setBugDetectionRecommendations(bugDetectionResult.getRecommendations());
             
             // Calculate final score
             result.calculateFinalScore();
@@ -175,7 +180,8 @@ public class OpenAIAnalysisService {
             "Code:\\n%s\\n\\n" +
             "Return as JSON with keys:\\n" +
             "- 'score' (number 0-100)\\n" +
-            "- 'reason' (detailed explanation for the score)\\n",
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 2-4 specific actionable improvements)\\n",
             language, code
         );
         
@@ -194,7 +200,10 @@ public class OpenAIAnalysisService {
             "Analyze if classes/functions are focused on a single responsibility or if they are doing too many things. " +
             "Return a score from 0-100 where 100 means excellent adherence to SRP.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100), 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 2-4 specific actionable improvements)\\n",
             language, code
         );
         
@@ -212,7 +221,10 @@ public class OpenAIAnalysisService {
             "Consider if appropriate patterns are used and if they're implemented correctly. " +
             "Return a score from 0-100.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100), 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 2-4 specific actionable improvements)\\n",
             language, code
         );
         
@@ -230,7 +242,10 @@ public class OpenAIAnalysisService {
             "Look for common security issues like injection flaws, insecure data handling, etc. " +
             "Return a score from 0-100 where 100 is very secure.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100), 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 2-4 specific actionable improvements)\\n",
             language, code
         );
         
@@ -249,7 +264,10 @@ public class OpenAIAnalysisService {
             "infinite loops, incorrect logic conditions, resource leaks, race conditions, and other potential bugs. " +
             "Return a score from 0-100 where 100 means bug-free code and 0 means many potential bugs.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (concise explanation with improvement suggestions in maximum 2 sentences about any bugs found).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 2-4 specific actionable improvements)\\n",
             language, code
         );
         
@@ -345,7 +363,16 @@ public class OpenAIAnalysisService {
             double score = jsonNode.get("score").asDouble();
             String reason = jsonNode.get("reason").asText();
             
-            return new ScoreWithReason(score, reason);
+            // Parse recommendations if available
+            List<String> recommendations = new ArrayList<>();
+            JsonNode recommendationsNode = jsonNode.get("recommendations");
+            if (recommendationsNode != null && recommendationsNode.isArray()) {
+                for (JsonNode rec : recommendationsNode) {
+                    recommendations.add(rec.asText());
+                }
+            }
+            
+            return new ScoreWithReason(score, reason, recommendations);
         } catch (Exception e) {
             logger.warn("Could not parse score and reason from response: {}", response);
             // Try to extract just a number as fallback
