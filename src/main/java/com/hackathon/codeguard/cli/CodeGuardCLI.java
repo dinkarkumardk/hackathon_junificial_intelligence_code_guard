@@ -67,6 +67,12 @@ public class CodeGuardCLI implements Callable<Integer> {
     )
     private String scanDirectory;
 
+    @Option(
+        names = {"--kt"},
+        description = "Generate KT (Knowledge Transfer) documentation using OpenAI"
+    )
+    private boolean generateKT = false;
+
     public enum AnalysisMode {
         STANDARD,
         QA_AUTOMATION,
@@ -98,8 +104,8 @@ public class CodeGuardCLI implements Callable<Integer> {
             System.out.println("Analyzing " + filesToAnalyze.size() + " files...");
             
             // Perform analysis
-            AnalysisResult result = analysisService.analyzeFiles(filesToAnalyze, mode);
-            
+            AnalysisResult result = analysisService.analyzeFiles(filesToAnalyze, mode, generateKT);
+
             // Check threshold
             if (result.getOverallScore() < threshold) {
                 System.err.println("Quality gate failed. Score: " + result.getOverallScore() + 
@@ -110,16 +116,15 @@ public class CodeGuardCLI implements Callable<Integer> {
                 }
             }
 
-            // Generate all reports including KT documentation
+            // Generate all reports
             reportService.generateReports(result, outputDir, reportType, format);
-            reportService.generateKTDocumentation(result, outputDir);
-            System.out.println("KT documentation generated in: " + outputDir + "/kt");
-
+            if (generateKT) {
+                reportService.generateKTDocumentation(result, outputDir);
+                System.out.println("KT documentation generated in: " + outputDir + "/kt");
+            }
             System.out.println("Analysis complete. Reports generated in: " + outputDir);
             System.out.println("Overall Score: " + result.getOverallScore());
-            
             return 0;
-            
         } catch (Exception e) {
             System.err.println("Error during analysis: " + e.getMessage());
             e.printStackTrace();

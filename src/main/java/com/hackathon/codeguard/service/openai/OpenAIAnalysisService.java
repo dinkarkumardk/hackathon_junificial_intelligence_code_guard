@@ -51,7 +51,7 @@ public class OpenAIAnalysisService {
     /**
      * Analyzes a single code file using OpenAI API
      */
-    public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode) throws Exception {
+    public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode, boolean ktEnabled) throws Exception {
         logger.debug("Analyzing file with OpenAI: {}", filePath);
 
         FileAnalysisResult result = new FileAnalysisResult(
@@ -69,11 +69,12 @@ public class OpenAIAnalysisService {
         result.setCleanCode(analyzeCleanCode(fileContent, language));
         result.setSecurity(analyzeSecurity(fileContent, language));
 
-        // Extract KT data using OpenAI (placeholder logic, replace with actual extraction)
-        result.setKtPurpose(analyzeKtPurpose(fileContent, language));
-        result.setKtDesign(analyzeKtDesign(fileContent, language));
-        result.setKtModules(analyzeKtModules(fileContent, language));
-
+        // Extract KT data using OpenAI only if KT is enabled
+        if (ktEnabled) {
+            result.setKtPurpose(analyzeKtPurpose(fileContent, language));
+            result.setKtDesign(analyzeKtDesign(fileContent, language));
+            result.setKtModules(analyzeKtModules(fileContent, language));
+        }
 
         // Calculate final score
         result.calculateFinalScore();
