@@ -132,12 +132,29 @@ public class CodeGuardCLI implements Callable<Integer> {
         }
     }
 
+    private static final List<String> SUPPORTED_CONFIG_FILES = List.of(
+        "pom.xml", "build.gradle", "build.gradle.kts", "build.xml", "ivy.xml",
+        "package.json", "package-lock.json", "yarn.lock",
+        "requirements.txt", "pyproject.toml", "setup.py", "Pipfile", "Pipfile.lock",
+        "composer.json", "composer.lock",
+        "Cargo.toml", "Cargo.lock",
+        "go.mod", "go.sum",
+        ".csproj", ".fsproj", "packages.config",
+        "Makefile", "CMakeLists.txt", "vcpkg.json", "Gemfile"
+    );
+
     private List<Path> determineFilesToAnalyze() {
-        // Implementation will scan files/directories and filter code files
         List<Path> result = new java.util.ArrayList<>();
         java.util.function.Predicate<Path> codeFileFilter = path -> {
             String name = path.getFileName().toString().toLowerCase();
-            return name.endsWith(".java") || name.endsWith(".ts");
+            // Accept code files and supported config files, but ignore test files
+            boolean isConfig = SUPPORTED_CONFIG_FILES.stream().anyMatch(cfg -> name.equals(cfg.toLowerCase()));
+            boolean isCode = name.endsWith(".java") || name.endsWith(".ts");
+            boolean isTest = name.contains("test") || name.contains("spec") || name.contains("mock") || name.endsWith(".test.java") || name.endsWith(".spec.java") || name.endsWith(".test.ts") || name.endsWith(".spec.ts");
+            // Also ignore files in test directories
+            String pathStr = path.toString().replace('\\', '/').toLowerCase();
+            boolean inTestDir = pathStr.contains("/test/") || pathStr.contains("/tests/");
+            return (isCode || isConfig) && !isTest && !inTestDir;
         };
 
         if (scanDirectory != null && !scanDirectory.isEmpty()) {
