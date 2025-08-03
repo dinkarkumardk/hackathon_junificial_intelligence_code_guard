@@ -4,6 +4,7 @@ import com.hackathon.codeguard.model.AnalysisResult;
 import com.hackathon.codeguard.model.FileAnalysisResult;
 import com.hackathon.codeguard.model.ReportType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hackathon.codeguard.service.openai.OpenAIAnalysisService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -126,21 +131,21 @@ public class ReportGenerationService {
 
         // Summary section with file metrics
         html.append("<div class=\"summary\">");
-        
+
         // Calculate aggregate metrics
         int totalLines = result.getFileResults().stream()
             .mapToInt(file -> (Integer) file.getMetrics().getOrDefault("linesOfCode", 0))
             .sum();
-        
+
         int totalFunctions = result.getFileResults().stream()
             .mapToInt(file -> (Integer) file.getMetrics().getOrDefault("numberOfMethods", 0))
             .sum();
-        
+
         double avgComplexity = result.getFileResults().stream()
             .mapToInt(file -> (Integer) file.getMetrics().getOrDefault("cyclomaticComplexity", 0))
             .average()
             .orElse(0.0);
-        
+
         html.append(String.format("""
             <div class="metric-card">
                 <div class="metric-value">%.1f</div>
@@ -254,7 +259,7 @@ public class ReportGenerationService {
                 <h2>Detailed Analysis Reasoning</h2>
                 <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings for each file:</p>
             """);
-        
+
         for (FileAnalysisResult file : result.getFileResults()) {
             html.append(String.format("""
                 <div class="reasoning-item">
@@ -288,7 +293,7 @@ public class ReportGenerationService {
                 escapeHtml(file.getBugDetectionReason() != null ? file.getBugDetectionReason() : "No detailed reasoning available")
             ));
         }
-        
+
         html.append("</div>");
 
         // File Metrics Section
@@ -309,7 +314,7 @@ public class ReportGenerationService {
                     </thead>
                     <tbody>
             """);
-        
+
         for (FileAnalysisResult file : result.getFileResults()) {
             Map<String, Object> metrics = file.getMetrics();
             html.append(String.format("""
@@ -332,7 +337,7 @@ public class ReportGenerationService {
                 metrics.getOrDefault("codeComplexity", "UNKNOWN")
             ));
         }
-        
+
         html.append("</tbody></table></div>");
 
         // Recommendations
@@ -486,6 +491,145 @@ public class ReportGenerationService {
         return html.toString();
     }
 
+    /**
+     * Generates KT (Knowledge Transfer) documentation for new joiners in HTML format.
+     * Each section is generated as a separate file and linked from index.html in the kt folder.
+     */
+    public void generateKTDocumentation(AnalysisResult result, String outputDir) throws IOException {
+        Path ktDir = Paths.get(outputDir, "kt");
+        Files.createDirectories(ktDir);
+        OpenAIAnalysisService openAIService = new OpenAIAnalysisService();
+        // Merge and summarize KT data for each section
+        String mergedPurpose = result.getFileResults().stream()
+            .map(FileAnalysisResult::getKtPurpose)
+            .filter(s -> s != null && !s.isBlank())
+            .reduce("", (a, b) -> a + "\n" + b);
+        String mergedDesign = result.getFileResults().stream()
+            .map(FileAnalysisResult::getKtDesign)
+            .filter(s -> s != null && !s.isBlank())
+            .reduce("", (a, b) -> a + "\n" + b);
+        String mergedModules = result.getFileResults().stream()
+            .map(FileAnalysisResult::getKtModules)
+            .filter(s -> s != null && !s.isBlank())
+            .reduce("", (a, b) -> a + "\n" + b);
+        // Summarize using OpenAI
+        String summarizedPurpose = mergedPurpose.isBlank() ? "No data from OpenAI." : openAIService.summarizePurpose(mergedPurpose);
+        String summarizedDesign = mergedDesign.isBlank() ? "No data from OpenAI." : openAIService.summarizeDesign(mergedDesign);
+        String summarizedModules = mergedModules.isBlank() ? "No data from OpenAI." : openAIService.summarizeModules(mergedModules);
+        // Generate KT HTML files using summaries
+        Files.writeString(ktDir.resolve("purpose.html"), buildKTPurposeHtml(summarizedPurpose));
+        Files.writeString(ktDir.resolve("design.html"), buildKTDesignHtml(summarizedDesign));
+        Files.writeString(ktDir.resolve("modules.html"), buildKTModulesHtml(summarizedModules));
+        Files.writeString(ktDir.resolve("index.html"), buildKTIndexHtml());
+    }
+
+    private String getKTCommonCss() {
+        return "<style>" +
+            "body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }" +
+            ".container { max-width: 900px; margin: 40px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }" +
+            "h1, h2 { color: #007acc; }" +
+            "ul { margin-left: 20px; }" +
+            ".section { margin-bottom: 32px; }" +
+            ".nav { margin-bottom: 24px; }" +
+            ".nav a { margin-right: 16px; color: #007acc; text-decoration: none; font-weight: bold; }" +
+            ".nav a:hover { text-decoration: underline; }" +
+            "</style>";
+    }
+
+    private String buildKTIndexHtml() {
+        return """
+        <!DOCTYPE html>
+        <html lang=\"en\">
+        <head>
+            <meta charset=\"UTF-8\">
+            <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+            <title>Knowledge Transfer - Code Guard</title>
+            """ + getKTCommonCss() + """
+        </head>
+        <body>
+        <div class=\"container\">
+            <h1>Knowledge Transfer (KT) Documentation</h1>
+            <ul class=\"nav\" style=\"list-style-type:none; padding:0;\">
+                <li style=\"margin-bottom:16px;\"><a href=\"purpose.html\">Purpose & Goals</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"design.html\">System Design</a></li>
+                <li style=\"margin-bottom:16px;\"><a href=\"modules.html\">Modules & Business Logic</a></li>
+            </ul>
+            <div class=\"section\">
+                <p>Welcome! Use the navigation above to explore each KT section. All documents are designed for new joiners and onboarding.</p>
+            </div>
+        </div>
+        </body>
+        </html>
+        """;
+    }
+
+    private String buildKTPurposeHtml(String summary) {
+        String html = String.format("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Purpose & Goals</title>
+        %s
+        </head>
+        <body>
+        <div class='container'>
+            <h1>Purpose, Key Goals, and Stakeholders</h1>
+            <p>%s</p>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """, getKTCommonCss(), summary);
+        return html;
+    }
+
+    private String buildKTDesignHtml(String summary) {
+        String html = String.format("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - System Design</title>
+        %s
+        </head>
+        <body>
+        <div class='container'>
+            <h1>High-Level System Design, Tech Stack, and Component Interactions</h1>
+            <p>%s</p>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """, getKTCommonCss(), summary);
+        return html;
+    }
+
+    private String buildKTModulesHtml(String summary) {
+        String html = String.format("""
+        <!DOCTYPE html>
+        <html lang='en'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>KT - Modules & Business Logic</title>
+        %s
+        </head>
+        <body>
+        <div class='container'>
+            <h1>Functional Overview of Each Module and Key Business Logic</h1>
+            <p>%s</p>
+            <a href='index.html'>Back to KT Index</a>
+        </div>
+        </body>
+        </html>
+        """, getKTCommonCss(), summary);
+        return html;
+    }
+
+
     private String getQualityLevel(double score) {
         if (score >= 90) return "Excellent";
         if (score >= 80) return "Good";
@@ -499,7 +643,7 @@ public class ReportGenerationService {
         if (score >= 70) return "score-fair";
         return "score-poor";
     }
-    
+
     /**
      * Escapes HTML special characters to prevent XSS and formatting issues
      */

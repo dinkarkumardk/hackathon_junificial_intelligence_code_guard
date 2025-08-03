@@ -49,6 +49,9 @@ RUN chmod +x /app/entrypoint.sh && \
 # Switch to non-root user
 USER appuser
 
+# Set entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
+
 # Expose ports (for potential web interface or API)
 EXPOSE 8080
 
@@ -64,9 +67,6 @@ ENV JAVA_OPTS="-Xmx512m -Xms256m" \
 
 # Volume for reports and input files
 VOLUME ["/app/reports", "/app/input", "/app/logs"]
-
-# Entry point
-ENTRYPOINT ["/app/entrypoint.sh"]
 
 # Default command
 CMD ["--help"]

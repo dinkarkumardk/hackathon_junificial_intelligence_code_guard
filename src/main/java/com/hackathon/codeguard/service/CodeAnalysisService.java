@@ -31,7 +31,7 @@ public class CodeAnalysisService {
     /**
      * Analyzes multiple code files and returns comprehensive results
      */
-    public AnalysisResult analyzeFiles(List<Path> filePaths, AnalysisMode mode) throws Exception {
+    public AnalysisResult analyzeFiles(List<Path> filePaths, AnalysisMode mode, boolean ktEnabled) throws Exception {
         logger.info("Starting analysis of {} files in {} mode", filePaths.size(), mode);
         
         List<FileAnalysisResult> fileResults = new ArrayList<>();
@@ -45,13 +45,12 @@ public class CodeAnalysisService {
                 String fileContent = fileService.readFileContent(filePath);
                 
                 // Analyze with OpenAI
-                FileAnalysisResult result = openAIService.analyzeCodeFile(filePath, fileContent, mode);
+                FileAnalysisResult result = openAIService.analyzeCodeFile(filePath, fileContent, mode, ktEnabled);
                 fileResults.add(result);
                 totalScore += result.getFinalScore();
                 
             } catch (Exception e) {
-                logger.error("Error analyzing file {}: {}", filePath, e.getMessage());
-                // Continue with other files rather than failing completely
+                logger.warn("Error analyzing file {}: {}", filePath, e.getMessage());
             }
         }
 

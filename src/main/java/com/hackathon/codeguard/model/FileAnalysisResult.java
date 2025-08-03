@@ -64,6 +64,19 @@ public class FileAnalysisResult {
     @JsonProperty("metrics")
     private Map<String, Object> metrics;
 
+    @JsonProperty("ktPurpose")
+    private String ktPurpose;
+    @JsonProperty("ktDesign")
+    private String ktDesign;
+    @JsonProperty("ktModules")
+    private String ktModules;
+    @JsonProperty("ktDataFlow")
+    private String ktDataFlow;
+    @JsonProperty("ktExecution")
+    private String ktExecution;
+    @JsonProperty("ktTools")
+    private String ktTools;
+
     // Constructors
     public FileAnalysisResult() {}
 
@@ -140,6 +153,19 @@ public class FileAnalysisResult {
     
     public String getBugDetectionReason() { return bugDetectionReason; }
     public void setBugDetectionReason(String bugDetectionReason) { this.bugDetectionReason = bugDetectionReason; }
+
+    public String getKtPurpose() { return ktPurpose; }
+    public void setKtPurpose(String ktPurpose) { this.ktPurpose = ktPurpose; }
+    public String getKtDesign() { return ktDesign; }
+    public void setKtDesign(String ktDesign) { this.ktDesign = ktDesign; }
+    public String getKtModules() { return ktModules; }
+    public void setKtModules(String ktModules) { this.ktModules = ktModules; }
+    public String getKtDataFlow() { return ktDataFlow; }
+    public void setKtDataFlow(String ktDataFlow) { this.ktDataFlow = ktDataFlow; }
+    public String getKtExecution() { return ktExecution; }
+    public void setKtExecution(String ktExecution) { this.ktExecution = ktExecution; }
+    public String getKtTools() { return ktTools; }
+    public void setKtTools(String ktTools) { this.ktTools = ktTools; }
 
     /**
      * Quality indicator enum for color coding

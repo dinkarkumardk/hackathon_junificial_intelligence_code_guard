@@ -225,3 +225,22 @@ A minimal code analysis tool that scores code files and generates technical & no
 - Only OpenAI APIs are used for code file analysis, scoring, and report generation.
 
 ---
+
+## New Joiner Knowledge Transfer (KT) Documentation Requirement
+
+In addition to technical and non-technical code reports, the tool must generate KT (Knowledge Transfer) documents in HTML format for new joiners. The KT documentation should include:
+
+- **Purpose, Key Goals, and Stakeholders:**
+  - Clearly state the purpose of the system, its main objectives, and the stakeholders involved.
+- **High-Level System Design, Tech Stack, and Component Interactions:**
+  - Provide an architectural overview, list technologies used, and describe how major components interact.
+- **Functional Overview of Each Module and Key Business Logic:**
+  - Summarize the role of each module and highlight important business logic.
+- **Data Flow:**
+  - Explain how data is collected, processed, and output, including input/output formats, APIs, and storage mechanisms.
+- **Report Execution Steps:**
+  - Give a step-by-step explanation of how the report generation process works.
+- **Tools, Libraries, External Services, and Version Constraints:**
+  - List all tools, libraries, and external services used, along with any version requirements.
+
+The KT document should be generated automatically in HTML format to help new joiners quickly understand the system and its operation.
