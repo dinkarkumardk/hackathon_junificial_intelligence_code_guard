@@ -30,11 +30,30 @@ public class FileAnalysisResult {
     @JsonProperty("security")
     private double security;
     
+    @JsonProperty("bugDetection")
+    private double bugDetection;
+    
     @JsonProperty("finalScore")
     private double finalScore;
     
     @JsonProperty("qualityIndicator")
     private QualityIndicator qualityIndicator;
+    
+    // Reason fields for detailed explanations
+    @JsonProperty("codeQualityReason")
+    private String codeQualityReason;
+    
+    @JsonProperty("solidReason")
+    private String solidReason;
+    
+    @JsonProperty("designPatternsReason")
+    private String designPatternsReason;
+    
+    @JsonProperty("securityReason")
+    private String securityReason;
+    
+    @JsonProperty("bugDetectionReason")
+    private String bugDetectionReason;
     
     @JsonProperty("issues")
     private List<CodeIssue> issues;
@@ -55,8 +74,8 @@ public class FileAnalysisResult {
 
     // Calculate final score based on weighted criteria
     public void calculateFinalScore() {
-        this.finalScore = (codeQuality * 0.30) + (solid * 0.25) + (designPatterns * 0.15) + 
-                         (cleanCode * 0.20) + (security * 0.10);
+        this.finalScore = (codeQuality * 0.25) + (solid * 0.20) + (designPatterns * 0.15) + 
+                         (security * 0.20) + (bugDetection * 0.20);
         this.qualityIndicator = determineQualityIndicator(finalScore);
     }
 
@@ -88,6 +107,9 @@ public class FileAnalysisResult {
     public double getSecurity() { return security; }
     public void setSecurity(double security) { this.security = security; }
     
+    public double getBugDetection() { return bugDetection; }
+    public void setBugDetection(double bugDetection) { this.bugDetection = bugDetection; }
+    
     public double getFinalScore() { return finalScore; }
     public void setFinalScore(double finalScore) { this.finalScore = finalScore; }
     
@@ -102,6 +124,22 @@ public class FileAnalysisResult {
     
     public Map<String, Object> getMetrics() { return metrics; }
     public void setMetrics(Map<String, Object> metrics) { this.metrics = metrics; }
+    
+    // Reason getters and setters
+    public String getCodeQualityReason() { return codeQualityReason; }
+    public void setCodeQualityReason(String codeQualityReason) { this.codeQualityReason = codeQualityReason; }
+    
+    public String getSolidReason() { return solidReason; }
+    public void setSolidReason(String solidReason) { this.solidReason = solidReason; }
+    
+    public String getDesignPatternsReason() { return designPatternsReason; }
+    public void setDesignPatternsReason(String designPatternsReason) { this.designPatternsReason = designPatternsReason; }
+    
+    public String getSecurityReason() { return securityReason; }
+    public void setSecurityReason(String securityReason) { this.securityReason = securityReason; }
+    
+    public String getBugDetectionReason() { return bugDetectionReason; }
+    public void setBugDetectionReason(String bugDetectionReason) { this.bugDetectionReason = bugDetectionReason; }
 
     /**
      * Quality indicator enum for color coding
