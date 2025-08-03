@@ -221,28 +221,69 @@ public class ReportGenerationService {
                 <div class="reasoning-item">
                     <h3>%s</h3>
                     <div class="reasoning-title">Code Quality (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
+                    """,
+                escapeHtml(file.getFilename()),
+                file.getCodeQuality()
+            ));
+            
+            // Add code quality recommendations only
+            if (file.getCodeQualityRecommendations() != null && !file.getCodeQualityRecommendations().isEmpty()) {
+                html.append("<div class=\"reasoning-title\">Key Recommendations:</div><ul>");
+                for (String rec : file.getCodeQualityRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul>");
+            }
+            
+            html.append(String.format("""
                     <br>
                     <div class="reasoning-title">SOLID Principles (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
+                    """,
+                file.getSolid()
+            ));
+            
+            // Add SOLID recommendations only
+            if (file.getSolidRecommendations() != null && !file.getSolidRecommendations().isEmpty()) {
+                html.append("<div class=\"reasoning-title\">Key Recommendations:</div><ul>");
+                for (String rec : file.getSolidRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul>");
+            }
+            
+            html.append(String.format("""
                     <br>
                     <div class="reasoning-title">Design Patterns (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
+                    """,
+                file.getDesignPatterns()
+            ));
+            
+            // Add design patterns recommendations only
+            if (file.getDesignPatternsRecommendations() != null && !file.getDesignPatternsRecommendations().isEmpty()) {
+                html.append("<div class=\"reasoning-title\">Key Recommendations:</div><ul>");
+                for (String rec : file.getDesignPatternsRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul>");
+            }
+            
+            html.append(String.format("""
                     <br>
                     <div class="reasoning-title">Security (%.1f/100):</div>
-                    <div class="reasoning-text">%s</div>
-                </div>
                 """,
-                escapeHtml(file.getFilename()),
-                file.getCodeQuality(),
-                escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available"),
-                file.getSolid(),
-                escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available"),
-                file.getDesignPatterns(),
-                escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available"),
-                file.getSecurity(),
-                escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available")
+                file.getSecurity()
             ));
+            
+            // Add security recommendations only
+            if (file.getSecurityRecommendations() != null && !file.getSecurityRecommendations().isEmpty()) {
+                html.append("<div class=\"reasoning-title\">Key Recommendations:</div><ul>");
+                for (String rec : file.getSecurityRecommendations()) {
+                    html.append("<li>").append(escapeHtml(rec)).append("</li>");
+                }
+                html.append("</ul>");
+            }
+            
+            html.append("</div>");
         }
         
         html.append("</div>");

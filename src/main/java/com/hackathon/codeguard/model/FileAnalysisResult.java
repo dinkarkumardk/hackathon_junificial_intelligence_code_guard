@@ -49,6 +49,19 @@ public class FileAnalysisResult {
     @JsonProperty("securityReason")
     private String securityReason;
     
+    // Recommendation fields for concise points
+    @JsonProperty("codeQualityRecommendations")
+    private List<String> codeQualityRecommendations;
+    
+    @JsonProperty("solidRecommendations")
+    private List<String> solidRecommendations;
+    
+    @JsonProperty("designPatternsRecommendations")
+    private List<String> designPatternsRecommendations;
+    
+    @JsonProperty("securityRecommendations")
+    private List<String> securityRecommendations;
+    
     @JsonProperty("issues")
     private List<CodeIssue> issues;
     
@@ -128,6 +141,27 @@ public class FileAnalysisResult {
     
     public String getSecurityReason() { return securityReason; }
     public void setSecurityReason(String securityReason) { this.securityReason = securityReason; }
+    
+    // Recommendation getters and setters
+    public List<String> getCodeQualityRecommendations() { return codeQualityRecommendations; }
+    public void setCodeQualityRecommendations(List<String> codeQualityRecommendations) { 
+        this.codeQualityRecommendations = codeQualityRecommendations; 
+    }
+    
+    public List<String> getSolidRecommendations() { return solidRecommendations; }
+    public void setSolidRecommendations(List<String> solidRecommendations) { 
+        this.solidRecommendations = solidRecommendations; 
+    }
+    
+    public List<String> getDesignPatternsRecommendations() { return designPatternsRecommendations; }
+    public void setDesignPatternsRecommendations(List<String> designPatternsRecommendations) { 
+        this.designPatternsRecommendations = designPatternsRecommendations; 
+    }
+    
+    public List<String> getSecurityRecommendations() { return securityRecommendations; }
+    public void setSecurityRecommendations(List<String> securityRecommendations) { 
+        this.securityRecommendations = securityRecommendations; 
+    }
 
     /**
      * Quality indicator enum for color coding

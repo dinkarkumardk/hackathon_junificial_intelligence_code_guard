@@ -67,18 +67,22 @@ public class OpenAIAnalysisService {
         ScoreWithReason codeQualityResult = analyzeCodeQuality(fileContent, language);
         result.setCodeQuality(codeQualityResult.getScore());
         result.setCodeQualityReason(codeQualityResult.getReason());
+        result.setCodeQualityRecommendations(codeQualityResult.getRecommendations());
         
         ScoreWithReason solidResult = analyzeSolidPrinciples(fileContent, language);
         result.setSolid(solidResult.getScore());
         result.setSolidReason(solidResult.getReason());
+        result.setSolidRecommendations(solidResult.getRecommendations());
         
         ScoreWithReason designPatternsResult = analyzeDesignPatterns(fileContent, language);
         result.setDesignPatterns(designPatternsResult.getScore());
         result.setDesignPatternsReason(designPatternsResult.getReason());
+        result.setDesignPatternsRecommendations(designPatternsResult.getRecommendations());
         
         ScoreWithReason securityResult = analyzeSecurity(fileContent, language);
         result.setSecurity(securityResult.getScore());
         result.setSecurityReason(securityResult.getReason());
+        result.setSecurityRecommendations(securityResult.getRecommendations());
         
         // Calculate final score
         result.calculateFinalScore();
@@ -96,7 +100,10 @@ public class OpenAIAnalysisService {
             "Analyze the following %s code for overall quality including readability, maintainability, " +
             "and documentation. Provide a score from 0-100 where 100 is excellent quality.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 4-5 concise actionable recommendations to improve code quality)",
             language, code
         );
         
@@ -109,7 +116,10 @@ public class OpenAIAnalysisService {
             "(Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion). " +
             "Return a score from 0-100.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 4-5 concise actionable recommendations to improve SOLID compliance)",
             language, code
         );
         
@@ -122,7 +132,10 @@ public class OpenAIAnalysisService {
             "Consider if appropriate patterns are used and if they're implemented correctly. " +
             "Return a score from 0-100.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 4-5 concise actionable recommendations to improve design patterns usage)",
             language, code
         );
         
@@ -135,7 +148,10 @@ public class OpenAIAnalysisService {
             "Look for common security issues like injection flaws, insecure data handling, etc. " +
             "Return a score from 0-100 where 100 is very secure.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (detailed explanation for the score).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n" +
+            "- 'recommendations' (array of 4-5 concise actionable recommendations to improve security)",
             language, code
         );
         
@@ -201,7 +217,16 @@ public class OpenAIAnalysisService {
             JsonNode jsonNode = objectMapper.readTree(response);
             double score = jsonNode.get("score").asDouble();
             String reason = jsonNode.get("reason").asText();
-            return new ScoreWithReason(score, reason);
+            
+            // Parse recommendations if present
+            List<String> recommendations = new ArrayList<>();
+            if (jsonNode.has("recommendations") && jsonNode.get("recommendations").isArray()) {
+                for (JsonNode recNode : jsonNode.get("recommendations")) {
+                    recommendations.add(recNode.asText());
+                }
+            }
+            
+            return new ScoreWithReason(score, reason, recommendations);
         } catch (Exception e) {
             logger.warn("Could not parse score and reason from response: {}", response);
             // Try to extract just a number as fallback
