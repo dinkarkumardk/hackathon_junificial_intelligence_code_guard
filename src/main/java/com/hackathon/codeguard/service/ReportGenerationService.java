@@ -113,6 +113,12 @@ public class ReportGenerationService {
                     .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
                     .reasoning-section { margin: 30px 0; padding: 20px; background-color: #f8f9fa; border-radius: 8px; border: 1px solid #dee2e6; }
                     .reasoning-section h2 { color: #495057; margin-bottom: 15px; border-bottom: 2px solid #dee2e6; padding-bottom: 10px; }
+                    .recommendations-section { margin: 30px 0; padding: 20px; background-color: #e8f5e8; border-radius: 8px; border: 1px solid #c3e6c3; }
+                    .recommendations-section h2 { color: #2d5016; margin-bottom: 15px; border-bottom: 2px solid #c3e6c3; padding-bottom: 10px; }
+                    .metric-recommendations { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+                    .metric-recommendations h3 { color: #333; margin-bottom: 10px; font-size: 1.1em; }
+                    .metric-recommendations ul { margin: 10px 0; padding-left: 20px; }
+                    .metric-recommendations li { margin: 5px 0; color: #555; line-height: 1.4; }
                     .reasoning-item { margin: 20px 0; padding: 15px; background-color: white; border-radius: 6px; border: 1px solid #e9ecef; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
                     .reasoning-item h3 { color: #212529; margin-bottom: 15px; font-size: 1.1em; border-bottom: 1px solid #dee2e6; padding-bottom: 8px; }
                     .reasoning-title { font-weight: bold; color: #495057; margin: 10px 0 5px 0; }
@@ -256,8 +262,8 @@ public class ReportGenerationService {
         // Detailed reasoning section
         html.append("""
             <div class="reasoning-section">
-                <h2>Detailed Analysis Reasoning</h2>
-                <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings for each file:</p>
+                <h2>Detailed Analysis Reasoning & Recommendations</h2>
+                <p>Hover over the scores in the table above to see brief explanations. Below are the detailed reasonings and specific recommendations for each file:</p>
             """);
 
         for (FileAnalysisResult file : result.getFileResults()) {
@@ -266,31 +272,56 @@ public class ReportGenerationService {
                     <h3>%s</h3>
                     <div class="reasoning-title">Code Quality (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
+                    <div class="metric-recommendations">
+                        <strong>Recommendations:</strong>
+                        <ul>%s</ul>
+                    </div>
                     <br>
                     <div class="reasoning-title">Single Responsibility Principle (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
+                    <div class="metric-recommendations">
+                        <strong>Recommendations:</strong>
+                        <ul>%s</ul>
+                    </div>
                     <br>
                     <div class="reasoning-title">Design Patterns (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
+                    <div class="metric-recommendations">
+                        <strong>Recommendations:</strong>
+                        <ul>%s</ul>
+                    </div>
                     <br>
                     <div class="reasoning-title">Security (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
+                    <div class="metric-recommendations">
+                        <strong>Recommendations:</strong>
+                        <ul>%s</ul>
+                    </div>
                     <br>
                     <div class="reasoning-title">Bug Detection (%.1f/100):</div>
                     <div class="reasoning-text">%s</div>
+                    <div class="metric-recommendations">
+                        <strong>Recommendations:</strong>
+                        <ul>%s</ul>
+                    </div>
                 </div>
                 """,
                 escapeHtml(file.getFilename()),
                 file.getCodeQuality(),
                 escapeHtml(file.getCodeQualityReason() != null ? file.getCodeQualityReason() : "No detailed reasoning available"),
+                getCodeQualityRecommendations(file.getCodeQuality()),
                 file.getSolid(),
                 escapeHtml(file.getSolidReason() != null ? file.getSolidReason() : "No detailed reasoning available"),
+                getSolidRecommendations(file.getSolid()),
                 file.getDesignPatterns(),
                 escapeHtml(file.getDesignPatternsReason() != null ? file.getDesignPatternsReason() : "No detailed reasoning available"),
+                getDesignPatternsRecommendations(file.getDesignPatterns()),
                 file.getSecurity(),
                 escapeHtml(file.getSecurityReason() != null ? file.getSecurityReason() : "No detailed reasoning available"),
+                getSecurityRecommendations(file.getSecurity()),
                 file.getBugDetection(),
-                escapeHtml(file.getBugDetectionReason() != null ? file.getBugDetectionReason() : "No detailed reasoning available")
+                escapeHtml(file.getBugDetectionReason() != null ? file.getBugDetectionReason() : "No detailed reasoning available"),
+                getBugDetectionRecommendations(file.getBugDetection())
             ));
         }
 
@@ -362,6 +393,116 @@ public class ReportGenerationService {
         ));
 
         return html.toString();
+    }
+
+    /**
+     * Generates code quality recommendations based on score
+     */
+    private String getCodeQualityRecommendations(double score) {
+        if (score < 70) {
+            return "<li>Add comprehensive code comments and documentation</li>" +
+                   "<li>Implement consistent naming conventions throughout the codebase</li>" +
+                   "<li>Reduce code duplication by extracting common functionality</li>" +
+                   "<li>Break down complex methods into smaller, focused functions</li>" +
+                   "<li>Add proper error handling and exception management</li>";
+        } else if (score < 85) {
+            return "<li>Enhance existing documentation with usage examples</li>" +
+                   "<li>Refactor complex conditional statements for better readability</li>" +
+                   "<li>Consider adding unit tests for better code coverage</li>" +
+                   "<li>Review and optimize algorithmic complexity where possible</li>";
+        } else {
+            return "<li>Maintain current code quality standards</li>" +
+                   "<li>Consider implementing advanced static analysis tools</li>" +
+                   "<li>Share best practices with the development team</li>";
+        }
+    }
+
+    /**
+     * Generates SOLID principles recommendations based on score
+     */
+    private String getSolidRecommendations(double score) {
+        if (score < 70) {
+            return "<li>Split large classes into smaller, more focused classes</li>" +
+                   "<li>Extract utility methods into separate utility classes</li>" +
+                   "<li>Separate business logic from data access logic</li>" +
+                   "<li>Apply the \"one reason to change\" principle to each class</li>" +
+                   "<li>Use dependency injection to reduce tight coupling</li>";
+        } else if (score < 85) {
+            return "<li>Review class responsibilities and consider further separation</li>" +
+                   "<li>Apply interface segregation principle more consistently</li>" +
+                   "<li>Consider using composition over inheritance where applicable</li>" +
+                   "<li>Implement proper abstraction layers</li>";
+        } else {
+            return "<li>Excellent adherence to SOLID principles</li>" +
+                   "<li>Continue monitoring for architectural drift</li>" +
+                   "<li>Consider mentoring other developers on SOLID principles</li>";
+        }
+    }
+
+    /**
+     * Generates design patterns recommendations based on score
+     */
+    private String getDesignPatternsRecommendations(double score) {
+        if (score < 70) {
+            return "<li>Implement Factory pattern for object creation complexity</li>" +
+                   "<li>Use Strategy pattern for algorithm variations</li>" +
+                   "<li>Apply Observer pattern for event-driven architectures</li>" +
+                   "<li>Consider Singleton pattern for shared resources (use carefully)</li>" +
+                   "<li>Implement Builder pattern for complex object construction</li>";
+        } else if (score < 85) {
+            return "<li>Evaluate existing patterns for proper implementation</li>" +
+                   "<li>Consider additional patterns like Decorator or Adapter</li>" +
+                   "<li>Document pattern usage for team knowledge sharing</li>" +
+                   "<li>Review pattern applications for over-engineering</li>";
+        } else {
+            return "<li>Excellent use of design patterns</li>" +
+                   "<li>Balance pattern usage to avoid over-complexity</li>" +
+                   "<li>Share pattern knowledge through code reviews</li>";
+        }
+    }
+
+    /**
+     * Generates security recommendations based on score
+     */
+    private String getSecurityRecommendations(double score) {
+        if (score < 70) {
+            return "<li>Implement input validation and sanitization</li>" +
+                   "<li>Add proper authentication and authorization checks</li>" +
+                   "<li>Remove hardcoded credentials and sensitive data</li>" +
+                   "<li>Use parameterized queries to prevent SQL injection</li>" +
+                   "<li>Implement proper error handling without information leakage</li>";
+        } else if (score < 85) {
+            return "<li>Enhance logging and monitoring for security events</li>" +
+                   "<li>Implement additional encryption for sensitive data</li>" +
+                   "<li>Review and update security dependencies regularly</li>" +
+                   "<li>Consider implementing security headers and CSRF protection</li>";
+        } else {
+            return "<li>Maintain current security standards</li>" +
+                   "<li>Conduct regular security audits and penetration testing</li>" +
+                   "<li>Stay updated with latest security vulnerabilities</li>";
+        }
+    }
+
+    /**
+     * Generates bug detection recommendations based on score
+     */
+    private String getBugDetectionRecommendations(double score) {
+        if (score < 70) {
+            return "<li>Add null checks and boundary condition validations</li>" +
+                   "<li>Implement comprehensive unit and integration tests</li>" +
+                   "<li>Use static analysis tools to catch potential issues</li>" +
+                   "<li>Add proper exception handling and recovery mechanisms</li>" +
+                   "<li>Review logic for edge cases and error conditions</li>";
+        } else if (score < 85) {
+            return "<li>Enhance test coverage for critical code paths</li>" +
+                   "<li>Implement mutation testing to improve test quality</li>" +
+                   "<li>Add performance testing for resource-intensive operations</li>" +
+                   "<li>Consider property-based testing for complex algorithms</li>";
+        } else {
+            return "<li>Excellent bug prevention practices</li>" +
+                   "<li>Maintain high test coverage and quality</li>" +
+                   "<li>Share testing best practices with the team</li>";
+        }
     }
 
     private String buildNonTechnicalHtmlReport(AnalysisResult result) {

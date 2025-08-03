@@ -54,81 +54,75 @@ public class OpenAIAnalysisService {
     /**
      * Analyzes a single code file using OpenAI API
      */
-    public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode, boolean ktEnabled) throws Exception {
+    public FileAnalysisResult analyzeCodeFile(Path filePath, String fileContent, AnalysisMode mode) throws Exception {
         logger.debug("Analyzing file with OpenAI: {}", filePath);
-
+        
         try {
             FileAnalysisResult result = new FileAnalysisResult(
-                    filePath.getFileName().toString(),
-                    filePath.toString()
+                filePath.getFileName().toString(),
+                filePath.toString()
             );
 
             // Determine programming language
             String language = fileService.determineProgrammingLanguage(filePath);
-
+            
             // Extract basic file metrics first
             Map<String, Object> fileMetrics = extractMetrics(fileContent, language);
             result.setMetrics(fileMetrics);
-
+            
             // Log file information
-            logger.info("Analyzing file: {} ({} lines, {} language)",
-                    filePath.getFileName(),
-                    fileMetrics.getOrDefault("linesOfCode", "unknown"),
-                    language);
-
+            logger.info("Analyzing file: {} ({} lines, {} language)", 
+                filePath.getFileName(), 
+                fileMetrics.getOrDefault("linesOfCode", "unknown"),
+                language);
+            
             // Analyze different aspects with individual exception handling
             ScoreWithReason codeQualityResult = analyzeCodeQuality(fileContent, language);
             result.setCodeQuality(codeQualityResult.getScore());
             result.setCodeQualityReason(codeQualityResult.getReason());
-
+            
             ScoreWithReason srpResult = analyzeSingleResponsibilityPrinciple(fileContent, language);
             result.setSolid(srpResult.getScore());
             result.setSolidReason(srpResult.getReason());
-
+            
             ScoreWithReason designPatternsResult = analyzeDesignPatterns(fileContent, language);
             result.setDesignPatterns(designPatternsResult.getScore());
             result.setDesignPatternsReason(designPatternsResult.getReason());
-
+            
             ScoreWithReason securityResult = analyzeSecurity(fileContent, language);
             result.setSecurity(securityResult.getScore());
             result.setSecurityReason(securityResult.getReason());
-
+            
             ScoreWithReason bugDetectionResult = analyzeBugDetection(fileContent, language);
             result.setBugDetection(bugDetectionResult.getScore());
             result.setBugDetectionReason(bugDetectionResult.getReason());
-
+            
             // Calculate final score
             result.calculateFinalScore();
-
+            
             // Get issues and suggestions (these have their own exception handling)
             result.setIssues(identifyIssues(fileContent, language));
             result.setSuggestions(generateSuggestions(fileContent, language, mode));
-
-            if (ktEnabled) {
-                result.setKtPurpose(analyzeKtPurpose(fileContent, language));
-                result.setKtDesign(analyzeKtDesign(fileContent, language));
-                result.setKtModules(analyzeKtModules(fileContent, language));
-            }
-
+            
             // Log analysis completion with metrics
-            logger.info("Analysis completed for {}: Final Score = {}, Lines = {}, Functions = {}, CC = {}",
-                    filePath.getFileName(),
-                    result.getFinalScore(),
-                    fileMetrics.getOrDefault("linesOfCode", "N/A"),
-                    fileMetrics.getOrDefault("numberOfMethods", "N/A"),
-                    fileMetrics.getOrDefault("cyclomaticComplexity", "N/A"));
-
+            logger.info("Analysis completed for {}: Final Score = {}, Lines = {}, Functions = {}, CC = {}", 
+                filePath.getFileName(),
+                result.getFinalScore(),
+                fileMetrics.getOrDefault("linesOfCode", "N/A"),
+                fileMetrics.getOrDefault("numberOfMethods", "N/A"),
+                fileMetrics.getOrDefault("cyclomaticComplexity", "N/A"));
+            
             return result;
-
+            
         } catch (Exception e) {
             logger.error("Critical error analyzing file {}: {}", filePath.getFileName(), e.getMessage());
-
+            
             // Create a fallback result with basic information
             FileAnalysisResult fallbackResult = new FileAnalysisResult(
-                    filePath.getFileName().toString(),
-                    filePath.toString()
+                filePath.getFileName().toString(),
+                filePath.toString()
             );
-
+            
             // Set default scores and error messages
             fallbackResult.setCodeQuality(0.0);
             fallbackResult.setCodeQualityReason("Analysis failed due to API error: " + e.getMessage());
@@ -140,7 +134,7 @@ public class OpenAIAnalysisService {
             fallbackResult.setSecurityReason("Analysis failed due to API error: " + e.getMessage());
             fallbackResult.setBugDetection(0.0);
             fallbackResult.setBugDetectionReason("Analysis failed due to API error: " + e.getMessage());
-
+            
             // Set basic metrics
             Map<String, Object> basicMetrics = new HashMap<>();
             basicMetrics.put("linesOfCode", fileContent.split("\n").length);
@@ -150,11 +144,11 @@ public class OpenAIAnalysisService {
             basicMetrics.put("commentRatio", 0.0);
             basicMetrics.put("codeComplexity", "UNKNOWN");
             fallbackResult.setMetrics(basicMetrics);
-
+            
             fallbackResult.calculateFinalScore();
             fallbackResult.setIssues(new ArrayList<>());
             fallbackResult.setSuggestions(new ArrayList<>());
-
+            
             return fallbackResult;
         }
     }
@@ -164,7 +158,9 @@ public class OpenAIAnalysisService {
             "Analyze the following %s code for overall quality including readability, maintainability, " +
             "and documentation. Provide a score from 0-100 where 100 is excellent quality.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys:\\n" +
+            "- 'score' (number 0-100)\\n" +
+            "- 'reason' (detailed explanation for the score)\\n",
             language, code
         );
         
@@ -183,7 +179,7 @@ public class OpenAIAnalysisService {
             "Analyze if classes/functions are focused on a single responsibility or if they are doing too many things. " +
             "Return a score from 0-100 where 100 means excellent adherence to SRP.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys 'score' (number 0-100), 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
             language, code
         );
         
@@ -201,7 +197,7 @@ public class OpenAIAnalysisService {
             "Consider if appropriate patterns are used and if they're implemented correctly. " +
             "Return a score from 0-100.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys 'score' (number 0-100), 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
             language, code
         );
         
@@ -219,7 +215,7 @@ public class OpenAIAnalysisService {
             "Look for common security issues like injection flaws, insecure data handling, etc. " +
             "Return a score from 0-100 where 100 is very secure.\\n\\n" +
             "Code:\\n%s\\n\\n" +
-            "Return as JSON with keys 'score' (number 0-100) and 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
+            "Return as JSON with keys 'score' (number 0-100), 'reason' (concise explanation with improvement suggestions in maximum 2 sentences).",
             language, code
         );
         
@@ -333,6 +329,7 @@ public class OpenAIAnalysisService {
             JsonNode jsonNode = objectMapper.readTree(response);
             double score = jsonNode.get("score").asDouble();
             String reason = jsonNode.get("reason").asText();
+            
             return new ScoreWithReason(score, reason);
         } catch (Exception e) {
             logger.warn("Could not parse score and reason from response: {}", response);
@@ -351,16 +348,16 @@ public class OpenAIAnalysisService {
     private String getResponseFromOpenAI(String prompt) throws Exception {
         return executeWithRetry(() -> {
             ChatMessage message = new ChatMessage(ChatMessageRole.USER.value(), prompt);
-
+            
             ChatCompletionRequest request = ChatCompletionRequest.builder()
                 .model(MODEL)
                 .messages(List.of(message))
                 .maxTokens(MAX_TOKENS)
                 .temperature(TEMPERATURE)
                 .build();
-
+            
             var completion = openAiService.createChatCompletion(request);
-
+            
             if (completion.getChoices() != null && !completion.getChoices().isEmpty()) {
                 String response = completion.getChoices().get(0).getMessage().getContent();
                 if (response == null || response.trim().isEmpty()) {
@@ -368,22 +365,22 @@ public class OpenAIAnalysisService {
                 }
                 return response;
             }
-
+            
             throw new RuntimeException("No response choices received from OpenAI");
         });
     }
-
+    
     private String executeWithRetry(java.util.function.Supplier<String> operation) throws Exception {
         Exception lastException = null;
-
+        
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 return operation.get();
-
+                
             } catch (com.theokanning.openai.OpenAiHttpException e) {
                 lastException = e;
                 logger.warn("OpenAI HTTP error on attempt {}/{}: {} - {}", attempt, MAX_RETRIES, e.statusCode, e.getMessage());
-
+                
                 if (e.statusCode == 429) { // Rate limit
                     if (attempt < MAX_RETRIES) {
                         logger.info("Rate limit hit, retrying in {} ms...", RETRY_DELAY_MS * attempt);
@@ -415,7 +412,7 @@ public class OpenAIAnalysisService {
                 } else {
                     throw new Exception("OpenAI API error: " + e.getMessage(), e);
                 }
-
+                
             } catch (RuntimeException e) {
                 lastException = e;
                 logger.warn("Runtime error on attempt {}/{}: {}", attempt, MAX_RETRIES, e.getMessage());
@@ -429,7 +426,7 @@ public class OpenAIAnalysisService {
                     continue;
                 }
                 throw new Exception("API call failed after " + MAX_RETRIES + " attempts: " + e.getMessage(), e);
-
+                
             } catch (Exception e) {
                 lastException = e;
                 logger.error("Unexpected error on attempt {}/{}: {}", attempt, MAX_RETRIES, e.getMessage());
@@ -437,7 +434,7 @@ public class OpenAIAnalysisService {
             }
         }
         
-        throw new Exception("Failed after " + MAX_RETRIES + " attempts: " +
+        throw new Exception("Failed after " + MAX_RETRIES + " attempts: " + 
             (lastException != null ? lastException.getMessage() : "Unknown error"), lastException);
     }
 
@@ -496,7 +493,7 @@ public class OpenAIAnalysisService {
             metrics.put("numberOfClasses", jsonNode.has("numberOfClasses") ? jsonNode.get("numberOfClasses").asInt() : 0);
             metrics.put("commentRatio", jsonNode.has("commentRatio") ? jsonNode.get("commentRatio").asDouble() : 0.0);
             metrics.put("codeComplexity", jsonNode.has("codeComplexity") ? jsonNode.get("codeComplexity").asText() : "UNKNOWN");
-
+            
             // Add any additional fields that might be present
             jsonNode.fields().forEachRemaining(entry -> {
                 String key = entry.getKey();
@@ -524,63 +521,6 @@ public class OpenAIAnalysisService {
             defaultMetrics.put("commentRatio", 0.0);
             defaultMetrics.put("codeComplexity", "UNKNOWN");
             return defaultMetrics;
-        }
-    }
-
-    // --- Replace extractKt* with analyzeKt* using new prompts ---
-    private String analyzeKtPurpose(String code, String language) throws Exception {
-        String prompt = "Describe the purpose of your system in 2–3 sentences. What is the core problem it aims to solve? Who are the primary users or stakeholders (e.g., end users, developers, admins, business teams)? What are the system's main objectives (e.g., automation, monitoring, data analysis, user experience enhancement)?\n\nCode:\n" + code;
-        return getResponseFromOpenAI(prompt);
-    }
-    private String analyzeKtDesign(String code, String language) throws Exception {
-        String prompt = "Provide a high-level architectural overview of your system in 2–3 sentences. Include:\n- Core components (e.g., frontend, backend, services, databases)\n- Technology stack used (languages, frameworks, tools, infrastructure)\n- How components interact with each other (e.g., API calls, message queues, DB connections)\nIf available, include or reference an architecture diagram.\n\nCode:\n" + code;
-        return getResponseFromOpenAI(prompt);
-    }
-    private String analyzeKtModules(String code, String language) throws Exception {
-        String prompt = "List the major functional modules in your system (e.g., User Management, Payment Processing, Analytics Dashboard) in 2–3 sentences. For each:\n- Briefly describe its responsibilities and what it does\n- Highlight any important business logic (e.g., validations, workflows, data rules) that it implements\n\nCode:\n" + code;
-        return getResponseFromOpenAI(prompt);
-    }
-    // Remove extractKt* methods
-
-    /**
-     * Summarizes the KT Purpose section using OpenAI
-     */
-    public String summarizePurpose(String purposeText) {
-        String prompt = "Summarize the following project purpose and goals for onboarding documentation. " +
-                "Make it concise, clear, and suitable for new joiners.\n\n" + purposeText;
-        try {
-            return getResponseFromOpenAI(prompt).trim();
-        } catch (Exception e) {
-            logger.warn("OpenAI summarizePurpose failed: {}", e.getMessage());
-            return "No summary available.";
-        }
-    }
-
-    /**
-     * Summarizes the KT Design section using OpenAI
-     */
-    public String summarizeDesign(String designText) {
-        String prompt = "Summarize the following system design, architecture, and tech stack for onboarding documentation. " +
-                "Make it concise, clear, and suitable for new joiners.\n\n" + designText;
-        try {
-            return getResponseFromOpenAI(prompt).trim();
-        } catch (Exception e) {
-            logger.warn("OpenAI summarizeDesign failed: {}", e.getMessage());
-            return "No summary available.";
-        }
-    }
-
-    /**
-     * Summarizes the KT Modules section using OpenAI
-     */
-    public String summarizeModules(String modulesText) {
-        String prompt = "Summarize the following modules and business logic for onboarding documentation. " +
-                "Make it concise, clear, and suitable for new joiners.\n\n" + modulesText;
-        try {
-            return getResponseFromOpenAI(prompt).trim();
-        } catch (Exception e) {
-            logger.warn("OpenAI summarizeModules failed: {}", e.getMessage());
-            return "No summary available.";
         }
     }
 }
